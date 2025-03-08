@@ -5,11 +5,22 @@ import styled, { createGlobalStyle } from 'styled-components'
 import Colors from './colors'
 // import Fonts from "../styles/fonts";
 
-export const responsiveDesktop = '1000px'
-export const responsiveTablet = '760px'
-export const responsiveMobile = '500px'
-
-export const clientHeaderHeight = '70px'
+export const Globals = {
+  responsive: {
+    desktop: '1000px',
+    tablet: '760px',
+    mobile: '500px'
+  },
+  dashboard: {
+    padding: '15px',
+    headerHeight: '60px',
+    menuWidth: {
+      opened: '220px',
+      closed: '70px'
+    },
+    viewMaxWidth: '1000px'
+  }
+}
 
 const GlobalStyle = createGlobalStyle`
   :root {
@@ -64,4 +75,3 @@ export const Screen = styled.div`
   height: fit-content;
   min-height: 100vh;
 `
-

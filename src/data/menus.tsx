@@ -22,6 +22,7 @@ import ConditionsManagementView from '@/screens/DashboardScreen/views/Conditions
 import ReportsUsersView from '@/screens/DashboardScreen/views/ReportsUsers'
 import ReportsAdsView from '@/screens/DashboardScreen/views/ReportsAds'
 import SettingsGeneralView from '@/screens/DashboardScreen/views/SettingsGeneral'
+import { GetProp, MenuProps } from 'antd'
 
 // Interface do Menu
 export interface IMenu {
@@ -151,4 +152,23 @@ export const adminMenus: IMenu[] = [
 // Função utilitária para obter categorias únicas
 export const getMenuCategories = (): string[] => {
   return [...new Set(adminMenus.map((menu) => menu.menuCategory))]
+}
+
+// Função para formatar os menus no formato do Ant Design
+export const formatMenusForAntDesign = (): GetProp<MenuProps, 'items'> => {
+  const categories = getMenuCategories()
+  return categories.map((category) => ({
+    key: `category-${category.toLowerCase().replace(' ', '-')}`,
+    label: category,
+    type: 'group',
+    children: adminMenus
+      .filter((menu) => menu.menuCategory === category && !menu.menuHidden)
+      .map((menu) => ({
+        key: menu.menuId,
+        icon: menu.menuIcon,
+        label: menu.menuName,
+        disabled: menu.menuDisabled,
+        title: menu.menuLegend
+      }))
+  }))
 }

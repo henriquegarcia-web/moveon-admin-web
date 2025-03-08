@@ -1,7 +1,7 @@
 // src/utils/styles/common.ts
 
 import styled from 'styled-components'
-import { Form, theme } from 'antd'
+import { Form, Menu, theme } from 'antd'
 
 import Fonts from './fonts'
 
@@ -107,5 +107,41 @@ export const FormattedForm = styled(Form)<{ onFinish: any }>`
   .ant-segmented-thumb {
     background-color: ${() => useToken().token.colorPrimary};
     color: white;
+  }
+`
+
+export const FormattedMenu = styled(Menu)<{ opened: number }>`
+  &.ant-menu {
+    border-right: none !important;
+
+    // Esconde as labels das categorias quando o menu está fechado
+    .ant-menu-item-group-title {
+      display: ${({ opened }) => (opened ? 'block' : 'none')} !important;
+      padding: 10px 0px 2px 4px !important;
+
+      /* padding: 10px 24px !important; */
+      font-size: ${Fonts.xxxs} !important;
+      font-weight: 400 !important;
+
+      color: ${() => useToken().token.colorTextDescription} !important;
+    }
+
+    // Ajusta os itens do menu quando fechado
+    .ant-menu-item {
+      height: 34px !important;
+      padding: ${({ opened }) => (opened ? '0 14px' : '0 14px')} !important;
+      border-radius: 6px !important;
+
+      .anticon svg {
+        font-size: ${Fonts.small} !important;
+      }
+
+      .ant-menu-title-content {
+        display: ${({ opened }) => (opened ? 'inline' : 'none')} !important;
+
+        font-size: ${Fonts.xxxs} !important;
+        font-weight: 400 !important;
+      }
+    }
   }
 `
