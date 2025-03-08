@@ -1,6 +1,10 @@
 import styled from 'styled-components'
-import { View } from '@/utils/styles/common'
+import { View, ViewContent } from '@/utils/styles/common'
 
 export const AdsApprovalView = styled(View)`
+  display: flex;
+`
+
+export const AdsApprovalViewContent = styled(ViewContent)`
   display: flex;
 `

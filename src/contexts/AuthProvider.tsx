@@ -8,7 +8,7 @@ import {
   ReactNode
 } from 'react'
 import { onAuthStateChanged, User } from 'firebase/auth'
-import { message } from 'antd'
+import { App } from 'antd'
 import { auth } from '@/firebase/config'
 import {
   loginAdmin,
@@ -24,8 +24,8 @@ interface AuthContextData {
   admin: IAdminProfile | null
   isAuthenticated: boolean
   loading: boolean
-  login: (email: string, password: string) => Promise<void>
-  logout: () => Promise<void>
+  handleLogin: (email: string, password: string) => Promise<void>
+  handleLogout: () => Promise<void>
   resetPassword: (email: string) => Promise<void>
   completeFirstAccess: (
     email: string,
@@ -37,6 +37,8 @@ interface AuthContextData {
 const AuthContext = createContext<AuthContextData>({} as AuthContextData)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const { message } = App.useApp()
+
   const [admin, setAdmin] = useState<IAdminProfile | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -62,7 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => unsubscribe()
   }, [])
 
-  const login = async (email: string, password: string) => {
+  const handleLogin = async (email: string, password: string) => {
     try {
       const userCredential = await loginAdmin(email, password)
       const adminData = await checkAdminStatus(userCredential.user.uid)
@@ -89,7 +91,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-  const logout = async () => {
+  const handleLogout = async () => {
     await logoutAdmin()
     setAdmin(null)
     setIsAuthenticated(false)
@@ -116,8 +118,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     admin,
     isAuthenticated,
     loading,
-    login,
-    logout,
+    handleLogin,
+    handleLogout,
     resetPassword: handleResetPassword,
     completeFirstAccess: handleCompleteFirstAccess
   }

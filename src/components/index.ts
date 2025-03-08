@@ -1,3 +1,5 @@
-import TemplateComponent from './TemplateComponent'
+import TemplateComponent from './ViewHeader'
+import UserMenu from './UserMenu'
+import ViewHeader from './ViewHeader'
 
-export { TemplateComponent }
+export { TemplateComponent, UserMenu, ViewHeader }

@@ -18,7 +18,10 @@ export const Globals = {
       opened: '220px',
       closed: '70px'
     },
-    viewMaxWidth: '1000px'
+    view: {
+      maxWidth: '1000px',
+      headerHeight: '60px'
+    }
   }
 }
 

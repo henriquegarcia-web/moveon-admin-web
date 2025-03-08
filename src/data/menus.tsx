@@ -1,15 +1,21 @@
 // src/data/menus.ts
 import { ReactNode } from 'react'
+import { GetProp, MenuProps } from 'antd'
+
 import {
-  HomeOutlined,
-  BarChartOutlined,
-  UserOutlined,
-  SettingOutlined,
-  DatabaseOutlined,
-  ShoppingOutlined,
-  CheckSquareOutlined,
-  AppstoreOutlined
-} from '@ant-design/icons'
+  LuChartColumnBig,
+  LuCircleUser,
+  LuGrid2X2,
+  LuGrid2X2Check,
+  LuHouse,
+  LuKeyRound,
+  LuLayoutGrid,
+  LuLayoutList,
+  LuLogOut,
+  LuMegaphone,
+  LuSettings,
+  LuUsers
+} from 'react-icons/lu'
 
 // Componentes das Views (placeholders por enquanto)
 import HomeView from '@/screens/DashboardScreen/views/Home'
@@ -22,7 +28,6 @@ import ConditionsManagementView from '@/screens/DashboardScreen/views/Conditions
 import ReportsUsersView from '@/screens/DashboardScreen/views/ReportsUsers'
 import ReportsAdsView from '@/screens/DashboardScreen/views/ReportsAds'
 import SettingsGeneralView from '@/screens/DashboardScreen/views/SettingsGeneral'
-import { GetProp, MenuProps } from 'antd'
 
 // Interface do Menu
 export interface IMenu {
@@ -37,13 +42,13 @@ export interface IMenu {
 }
 
 // Estrutura de Menus Separada por Categorias
-export const adminMenus: IMenu[] = [
+export const ADMIN_MENUS: IMenu[] = [
   // Categoria: Principal
   {
     menuId: 'inicio',
     menuName: 'Início',
     menuLegend: 'Visão geral do dashboard',
-    menuIcon: <HomeOutlined />,
+    menuIcon: <LuHouse />,
     menuView: <HomeView />,
     menuCategory: 'Principal',
     menuDisabled: false,
@@ -55,7 +60,7 @@ export const adminMenus: IMenu[] = [
     menuId: 'usuarios-relatorios',
     menuName: 'Relatório de Usuários',
     menuLegend: 'Estatísticas e dados de usuários',
-    menuIcon: <BarChartOutlined />,
+    menuIcon: <LuChartColumnBig />,
     menuView: <ReportsUsersView />,
     menuCategory: 'Relatórios',
     menuDisabled: false,
@@ -65,7 +70,7 @@ export const adminMenus: IMenu[] = [
     menuId: 'anuncios-relatorios',
     menuName: 'Relatório de Anúncios',
     menuLegend: 'Estatísticas de anúncios publicados',
-    menuIcon: <BarChartOutlined />,
+    menuIcon: <LuChartColumnBig />,
     menuView: <ReportsAdsView />,
     menuCategory: 'Relatórios',
     menuDisabled: false,
@@ -77,7 +82,7 @@ export const adminMenus: IMenu[] = [
     menuId: 'categorias',
     menuName: 'Categorias',
     menuLegend: 'Gerenciar categorias de produtos',
-    menuIcon: <AppstoreOutlined />,
+    menuIcon: <LuLayoutGrid />,
     menuView: <CategoriesManagementView />,
     menuCategory: 'Dados',
     menuDisabled: false,
@@ -87,7 +92,7 @@ export const adminMenus: IMenu[] = [
     menuId: 'esportes',
     menuName: 'Esportes',
     menuLegend: 'Gerenciar lista de esportes disponíveis',
-    menuIcon: <DatabaseOutlined />,
+    menuIcon: <LuLayoutList />,
     menuView: <SportsManagementView />,
     menuCategory: 'Dados',
     menuDisabled: false,
@@ -97,7 +102,7 @@ export const adminMenus: IMenu[] = [
     menuId: 'condicoes',
     menuName: 'Condições',
     menuLegend: 'Gerenciar estados dos produtos',
-    menuIcon: <DatabaseOutlined />,
+    menuIcon: <LuLayoutList />,
     menuView: <ConditionsManagementView />,
     menuCategory: 'Dados',
     menuDisabled: false,
@@ -109,7 +114,7 @@ export const adminMenus: IMenu[] = [
     menuId: 'usuarios',
     menuName: 'Usuários',
     menuLegend: 'Gerenciar usuários da plataforma',
-    menuIcon: <UserOutlined />,
+    menuIcon: <LuUsers />,
     menuView: <UsersListView />,
     menuCategory: 'Gerenciamento',
     menuDisabled: false,
@@ -119,7 +124,7 @@ export const adminMenus: IMenu[] = [
     menuId: 'anuncios',
     menuName: 'Anúncios',
     menuLegend: 'Listagem de todos os anúncios',
-    menuIcon: <ShoppingOutlined />,
+    menuIcon: <LuGrid2X2 />,
     menuView: <AdsListView />,
     menuCategory: 'Gerenciamento',
     menuDisabled: false,
@@ -129,7 +134,7 @@ export const adminMenus: IMenu[] = [
     menuId: 'anuncios-aprovacao',
     menuName: 'Aprovação de Anúncios',
     menuLegend: 'Aprovar ou rejeitar anúncios pendentes',
-    menuIcon: <CheckSquareOutlined />,
+    menuIcon: <LuGrid2X2Check />,
     menuView: <AdsApprovalView />,
     menuCategory: 'Gerenciamento',
     menuDisabled: false,
@@ -137,11 +142,32 @@ export const adminMenus: IMenu[] = [
   },
 
   // Categoria: Configurações
+
+  {
+    menuId: 'acessos',
+    menuName: 'Acessos',
+    menuLegend: 'Gerenciamento de acessos ao painel de administrador',
+    menuIcon: <LuKeyRound />,
+    menuView: <SettingsGeneralView />,
+    menuCategory: 'Configurações',
+    menuDisabled: false,
+    menuHidden: false
+  },
+  {
+    menuId: 'minha-conta',
+    menuName: 'Minha Conta',
+    menuLegend: 'Dados gerais da sua conta',
+    menuIcon: <LuCircleUser />,
+    menuView: <SettingsGeneralView />,
+    menuCategory: 'Configurações',
+    menuDisabled: false,
+    menuHidden: true
+  },
   {
     menuId: 'configuracoes',
     menuName: 'Configurações',
     menuLegend: 'Configurações gerais da plataforma',
-    menuIcon: <SettingOutlined />,
+    menuIcon: <LuSettings />,
     menuView: <SettingsGeneralView />,
     menuCategory: 'Configurações',
     menuDisabled: false,
@@ -149,26 +175,58 @@ export const adminMenus: IMenu[] = [
   }
 ]
 
+export const ADMIN_USER_MENU = [
+  {
+    menuId: 'minha-conta',
+    menuName: 'Minha Conta',
+    menuIcon: <LuCircleUser />,
+    menuDisabled: false
+  },
+  {
+    menuId: 'configuracoes',
+    menuName: 'Configurações',
+    menuIcon: <LuSettings />,
+    menuDisabled: false
+  },
+  {
+    menuId: 'user_exit',
+    menuName: 'Sair',
+    menuIcon: <LuLogOut />,
+    menuDisabled: false
+  }
+]
+
 // Função utilitária para obter categorias únicas
 export const getMenuCategories = (): string[] => {
-  return [...new Set(adminMenus.map((menu) => menu.menuCategory))]
+  return [...new Set(ADMIN_MENUS.map((menu) => menu.menuCategory))]
 }
 
 // Função para formatar os menus no formato do Ant Design
 export const formatMenusForAntDesign = (): GetProp<MenuProps, 'items'> => {
   const categories = getMenuCategories()
-  return categories.map((category) => ({
-    key: `category-${category.toLowerCase().replace(' ', '-')}`,
-    label: category,
-    type: 'group',
-    children: adminMenus
-      .filter((menu) => menu.menuCategory === category && !menu.menuHidden)
-      .map((menu) => ({
-        key: menu.menuId,
-        icon: menu.menuIcon,
-        label: menu.menuName,
-        disabled: menu.menuDisabled,
-        title: menu.menuLegend
-      }))
-  }))
+
+  return categories
+    .map((category) => {
+      const visibleMenus = ADMIN_MENUS.filter(
+        (menu) => menu.menuCategory === category && !menu.menuHidden
+      )
+
+      if (visibleMenus.length === 0) {
+        return null
+      }
+
+      return {
+        key: `category-${category.toLowerCase().replace(' ', '-')}`,
+        label: category,
+        type: 'group',
+        children: visibleMenus.map((menu) => ({
+          key: menu.menuId,
+          icon: menu.menuIcon,
+          label: menu.menuName,
+          disabled: menu.menuDisabled,
+          title: menu.menuLegend
+        }))
+      }
+    })
+    .filter((item) => item !== null) as GetProp<MenuProps, 'items'>
 }

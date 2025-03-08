@@ -39,7 +39,7 @@ type FirstAccessFormData = yup.InferType<typeof firstAccessSchema>
 
 const SignInScreen = () => {
   const navigate = useNavigate()
-  const { login, completeFirstAccess } = useAuth()
+  const { handleLogin, completeFirstAccess } = useAuth()
   const [isFirstAccess, setIsFirstAccess] = useState(false)
   const [email, setEmail] = useState<string>('')
 
@@ -74,7 +74,7 @@ const SignInScreen = () => {
   const onSignInSubmit = async (data: SignInFormData) => {
     try {
       setEmail(data.email)
-      await login(data.email, data.password)
+      await handleLogin(data.email, data.password)
       navigate('/dashboard')
     } catch (error: any) {
       if (error.message === 'FIRST_ACCESS_PENDING') {

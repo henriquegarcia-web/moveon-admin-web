@@ -8,7 +8,7 @@ import {
   ReactNode
 } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { adminMenus, IMenu } from '@/data/menus'
+import { ADMIN_MENUS, IMenu } from '@/data/menus'
 
 interface ViewsContextData {
   activeMenu: IMenu | null
@@ -27,25 +27,25 @@ export const ViewsProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true)
 
   const setActiveMenu = (id: string) => {
-    const menu = adminMenus.find((m) => m.menuId === id)
-    if (menu && !menu.menuDisabled && !menu.menuHidden) {
+    const menu = ADMIN_MENUS.find((m) => m.menuId === id)
+    if (menu && !menu.menuDisabled) {
       setActiveMenuState(menu)
       navigate(`/admin/${id}`)
     } else {
-      navigate(`/admin/${adminMenus[0].menuId}`)
+      navigate(`/admin/${ADMIN_MENUS[0].menuId}`)
     }
   }
 
   useEffect(() => {
     setLoading(true)
     if (!menuId) {
-      navigate(`/admin/${adminMenus[0].menuId}`)
+      navigate(`/admin/${ADMIN_MENUS[0].menuId}`)
     } else {
-      const menu = adminMenus.find((m) => m.menuId === menuId)
-      if (menu && !menu.menuDisabled && !menu.menuHidden) {
+      const menu = ADMIN_MENUS.find((m) => m.menuId === menuId)
+      if (menu && !menu.menuDisabled) {
         setActiveMenuState(menu)
       } else {
-        navigate(`/admin/${adminMenus[0].menuId}`)
+        navigate(`/admin/${ADMIN_MENUS[0].menuId}`)
       }
     }
     setLoading(false)
@@ -54,7 +54,7 @@ export const ViewsProvider = ({ children }: { children: ReactNode }) => {
   const contextValue: ViewsContextData = {
     activeMenu,
     setActiveMenu,
-    menus: adminMenus.filter((m) => !m.menuHidden),
+    menus: ADMIN_MENUS.filter((m) => !m.menuHidden),
     loadingMenus: loading
   }
 

@@ -1,6 +1,10 @@
 import styled from 'styled-components'
-import { View } from '@/utils/styles/common'
+import { View, ViewContent } from '@/utils/styles/common'
 
 export const ConditionsManagementView = styled(View)`
+  display: flex;
+`
+
+export const ConditionsManagementViewContent = styled(ViewContent)`
   display: flex;
 `

@@ -5,13 +5,12 @@ import { useState } from 'react'
 import * as S from './styles'
 import { LuPanelRightClose, LuPanelRightOpen } from 'react-icons/lu'
 
-import { useAuth } from '@/contexts/AuthProvider'
 import { useViews } from '@/contexts/ViewsProvider'
 import { formatMenusForAntDesign } from '@/data/menus'
-import { Button, Menu } from 'antd'
+import { Button } from 'antd'
+import { UserMenu } from '@/components'
 
 const DashboardScreen = () => {
-  const { logout } = useAuth()
   const { activeMenu, setActiveMenu, loadingMenus } = useViews()
 
   const [sideMenuOpened, setSideMenuOpened] = useState(true)
@@ -26,11 +25,13 @@ const DashboardScreen = () => {
     <S.DashboardScreen>
       <S.DashboardSideMenu opened={sideMenuOpened ? 1 : 0}>
         <S.DashboardSideMenuHeader>
-          <S.DashboardLogo
-            opened={sideMenuOpened ? 1 : 0}
-            src="/logo_green.png"
-            alt="Logo MoveOn"
-          />
+          <S.DashboardLogo>
+            <S.DashboardLogoImg
+              opened={sideMenuOpened ? 1 : 0}
+              src="/logo_green.png"
+              alt="Logo MoveOn"
+            />
+          </S.DashboardLogo>
         </S.DashboardSideMenuHeader>
         <S.DashboardSideMenuWrapper>
           <S.DashboardMenu
@@ -43,12 +44,17 @@ const DashboardScreen = () => {
           />
         </S.DashboardSideMenuWrapper>
       </S.DashboardSideMenu>
-      <S.DashboardMain>
+      <S.DashboardMain opened={sideMenuOpened ? 1 : 0}>
         <S.DashboardMainHeader>
           <Button
             icon={sideMenuOpened ? <LuPanelRightOpen /> : <LuPanelRightClose />}
             onClick={toggleSideMenu}
           />
+          <S.DashboardActiveViewLabel>
+            <h2>{activeMenu?.menuName}</h2>
+            <p>{activeMenu?.menuLegend}</p>
+          </S.DashboardActiveViewLabel>
+          <UserMenu />
         </S.DashboardMainHeader>
         <S.DashboardMainViewsWrapper>
           <S.DashboardMainView>

@@ -4,14 +4,43 @@ import styled from 'styled-components'
 import { Form, Menu, theme } from 'antd'
 
 import Fonts from './fonts'
+import { Globals } from './globals'
 
 const { useToken } = theme
 
 export const View = styled.div`
   display: flex;
   flex-direction: column;
+  row-gap: 10px;
   width: 100%;
   height: 100%;
+`
+
+export const ViewHeader = styled.header`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: ${Globals.dashboard.view.headerHeight};
+  padding: 0 ${Globals.dashboard.padding};
+  border-radius: 8px;
+
+  border: 1px solid ${() => useToken().token.colorBorderSecondary};
+  background-color: white;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.04);
+`
+
+export const ViewContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: fit-content;
+  padding: ${Globals.dashboard.padding};
+  border-radius: 8px;
+
+  border: 1px solid ${() => useToken().token.colorBorderSecondary};
+  background-color: white;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.04);
 `
 
 export const FormattedForm = styled(Form)<{ onFinish: any }>`

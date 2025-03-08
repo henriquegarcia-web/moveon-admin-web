@@ -6,6 +6,7 @@ import { ConfigProvider, theme } from 'antd'
 function App() {
   return <AppThemed />
 }
+import { App as AntdApp } from 'antd'
 
 export default App
 
@@ -19,7 +20,9 @@ const AppThemed = () => {
         }
       }}
     >
-      <AppRoutes />
+      <AntdApp>
+        <AppRoutes />
+      </AntdApp>
     </ConfigProvider>
   )
 }
