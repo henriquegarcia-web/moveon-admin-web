@@ -2,14 +2,23 @@
 
 import styled from 'styled-components'
 import { Modal, theme } from 'antd'
+import Fonts from '@/utils/styles/fonts'
 
 const { useToken } = theme
 
 export const StyledConfirmModal = styled(Modal)`
-  .ant-modal-body {
-    padding: 16px 24px;
+  .ant-modal-header {
+    padding: 10px 0;
+    margin-bottom: 20px;
+
+    .ant-modal-title {
+      font-size: ${Fonts.large};
+      line-height: ${Fonts.large};
+      font-weight: 500;
+    }
   }
-  .ant-modal-footer {
-    padding: 10px 16px;
+
+  .ant-modal-close {
+    top: 22px;
   }
 `

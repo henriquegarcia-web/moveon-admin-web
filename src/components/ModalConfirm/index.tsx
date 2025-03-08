@@ -1,10 +1,8 @@
 // src/components/ConfirmModal.tsx
 
 import { ReactNode } from 'react'
-
+import { ButtonProps, ModalProps } from 'antd'
 import * as S from './styles'
-
-import { ModalProps } from 'antd'
 
 export interface ConfirmModalProps
   extends Omit<ModalProps, 'onOk' | 'onCancel'> {
@@ -16,6 +14,7 @@ export interface ConfirmModalProps
   confirmText?: string
   cancelText?: string
   confirmLoading?: boolean
+  type?: 'default' | 'danger'
 }
 
 const ConfirmModal = ({
@@ -28,8 +27,13 @@ const ConfirmModal = ({
   cancelText = 'Cancelar',
   confirmLoading = false,
   width = 400,
+  type = 'default',
   ...rest
 }: ConfirmModalProps) => {
+  const okButtonProps: ButtonProps = {
+    danger: type === 'danger'
+  }
+
   return (
     <S.StyledConfirmModal
       title={title}
@@ -40,6 +44,8 @@ const ConfirmModal = ({
       cancelText={cancelText}
       confirmLoading={confirmLoading}
       width={width}
+      okButtonProps={okButtonProps}
+      centered
       {...rest}
     >
       {content}

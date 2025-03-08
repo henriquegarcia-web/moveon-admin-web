@@ -7,11 +7,3 @@ const { useToken } = theme
 export const ViewHeader = styled(ViewHeaderCustom)`
   display: flex;
 `
-
-export const ViewHeaderLeftSide = styled.div`
-  display: flex;
-`
-
-export const ViewHeaderRightSide = styled.div`
-  display: flex;
-`

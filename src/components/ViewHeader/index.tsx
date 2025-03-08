@@ -5,12 +5,7 @@ interface IViewHeader {
 }
 
 const ViewHeader = ({ children }: IViewHeader) => {
-  return (
-    <S.ViewHeader>
-      <S.ViewHeaderLeftSide></S.ViewHeaderLeftSide>
-      <S.ViewHeaderRightSide>{children}</S.ViewHeaderRightSide>
-    </S.ViewHeader>
-  )
+  return <S.ViewHeader>{children}</S.ViewHeader>
 }
 
 export default ViewHeader

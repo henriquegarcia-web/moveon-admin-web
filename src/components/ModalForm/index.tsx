@@ -34,6 +34,7 @@ const FormModal = <T extends object>({
       onCancel={onClose}
       footer={null}
       width={width}
+      centered
       {...rest}
     >
       <FormProvider {...formMethods}>{children}</FormProvider>

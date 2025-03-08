@@ -50,6 +50,7 @@ const Table = <T extends object>({
         onClick: () => onRowClick?.(record),
         style: { cursor: onRowClick ? 'pointer' : 'default' }
       })}
+      size="small"
       {...rest}
     />
   )

@@ -1,10 +1,12 @@
 // src/screens/DashboardScreen/views/AccessManagementView/index.tsx
+
 import { useState } from 'react'
 
 import * as S from './styles'
+import { LuLock, LuLockOpen, LuTrash } from 'react-icons/lu'
 
-import { Button, Tag } from 'antd'
-import { useForm } from 'react-hook-form'
+import { Button, Tag, Form } from 'antd'
+import { Controller, useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 
@@ -30,16 +32,29 @@ const AccessManagementView = () => {
   const { admins, loading, createAccess, deleteAccess, toggleBlockAccess } =
     useSettings()
   const { admin: currentAdmin } = useAuth()
+
   const [isCreateModalVisible, setCreateModalVisible] = useState(false)
   const [isDeleteModalVisible, setDeleteModalVisible] = useState(false)
   const [isBlockModalVisible, setBlockModalVisible] = useState(false)
   const [selectedAdmin, setSelectedAdmin] = useState<IAdminProfile | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
 
-  // Configuração do formulário
-  const formMethods = useForm<CreateAccessFormData>({
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting, isValid },
+    reset
+  } = useForm<CreateAccessFormData>({
     resolver: yupResolver(createAccessSchema),
     defaultValues: { email: '' }
   })
+
+  // Filtragem dos administradores com base no termo de pesquisa
+  const filteredAdmins = admins.filter((admin: IAdminProfile) =>
+    [admin.email, admin.name || ''].some((field) =>
+      field.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  )
 
   // Colunas da tabela
   const columns: TableColumn<IAdminProfile>[] = [
@@ -59,10 +74,10 @@ const AccessManagementView = () => {
       title: 'Status',
       key: 'status',
       render: (_, record) =>
-        record.firstAccessPending ? (
-          <Tag color="orange">Pendente</Tag>
-        ) : record.isBlocked ? (
+        record.isBlocked ? (
           <Tag color="red">Bloqueado</Tag>
+        ) : record.firstAccessPending ? (
+          <Tag color="orange">Pendente</Tag>
         ) : (
           <Tag color="green">Ativo</Tag>
         )
@@ -74,36 +89,35 @@ const AccessManagementView = () => {
       render: (_, record) => (
         <S.ActionButtons>
           <Button
-            type="link"
             danger
+            icon={<LuTrash />}
             disabled={record.id === currentAdmin?.id}
             onClick={() => {
               setSelectedAdmin(record)
               setDeleteModalVisible(true)
             }}
-          >
-            Excluir
-          </Button>
+            size="small"
+          />
           <Button
-            type="link"
+            danger={record.isBlocked}
+            icon={record.isBlocked ? <LuLock /> : <LuLockOpen />}
             disabled={record.id === currentAdmin?.id}
             onClick={() => {
               setSelectedAdmin(record)
               setBlockModalVisible(true)
             }}
-          >
-            {record.isBlocked ? 'Desbloquear' : 'Bloquear'}
-          </Button>
+            size="small"
+          />
         </S.ActionButtons>
       )
     }
   ]
 
   // Submissão do formulário
-  const handleCreateAccess = async (data: CreateAccessFormData) => {
+  const onCreateAccessSubmit = async (data: CreateAccessFormData) => {
     await createAccess(data.email)
     setCreateModalVisible(false)
-    formMethods.reset()
+    reset()
   }
 
   // Confirmação de exclusão
@@ -127,6 +141,12 @@ const AccessManagementView = () => {
   return (
     <S.AccessManagementView>
       <ViewHeader>
+        <S.SearchInput
+          placeholder="Pesquisar por e-mail ou nome"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ width: 200, marginRight: 16 }}
+        />
         <Button type="primary" onClick={() => setCreateModalVisible(true)}>
           Criar Acesso
         </Button>
@@ -134,7 +154,7 @@ const AccessManagementView = () => {
       <S.AccessManagementViewContent>
         <Table<IAdminProfile>
           columns={columns}
-          dataSource={admins}
+          dataSource={filteredAdmins}
           rowKey="id"
           loading={loading}
           pagination={{ pageSize: 10 }}
@@ -149,21 +169,27 @@ const AccessManagementView = () => {
         visible={isCreateModalVisible}
         onClose={() => setCreateModalVisible(false)}
         title="Criar Novo Acesso"
-        formMethods={formMethods}
+        formMethods={
+          { control, handleSubmit, formState: { errors, isSubmitting } } as any
+        }
       >
-        <form onSubmit={formMethods.handleSubmit(handleCreateAccess)}>
-          <S.FormItem>
-            <label>E-mail</label>
-            <S.Input
-              {...formMethods.register('email')}
-              placeholder="Digite o e-mail"
-            />
-            {formMethods.formState.errors.email && (
-              <S.ErrorMessage>
-                {formMethods.formState.errors.email.message}
-              </S.ErrorMessage>
+        <S.CreateAccessForm
+          onFinish={handleSubmit(onCreateAccessSubmit)}
+          layout="vertical"
+        >
+          <Controller
+            name="email"
+            control={control}
+            render={({ field }) => (
+              <Form.Item
+                label="E-mail"
+                validateStatus={errors.email ? 'error' : ''}
+                help={errors.email?.message}
+              >
+                <S.Input {...field} placeholder="Digite o e-mail" />
+              </Form.Item>
             )}
-          </S.FormItem>
+          />
           <S.ModalFooter>
             <Button onClick={() => setCreateModalVisible(false)}>
               Cancelar
@@ -171,12 +197,13 @@ const AccessManagementView = () => {
             <Button
               type="primary"
               htmlType="submit"
-              loading={formMethods.formState.isSubmitting}
+              disabled={!isValid}
+              loading={isSubmitting}
             >
               Criar
             </Button>
           </S.ModalFooter>
-        </form>
+        </S.CreateAccessForm>
       </FormModal>
 
       {/* Modal de Confirmação de Exclusão */}
@@ -188,6 +215,7 @@ const AccessManagementView = () => {
         content="Tem certeza que deseja excluir este acesso? Esta ação não pode ser desfeita."
         confirmText="Excluir"
         cancelText="Cancelar"
+        type="danger"
       />
 
       {/* Modal de Confirmação de Bloqueio/Desbloqueio */}
@@ -203,6 +231,7 @@ const AccessManagementView = () => {
         } o acesso de ${selectedAdmin?.email}?`}
         confirmText={selectedAdmin?.isBlocked ? 'Desbloquear' : 'Bloquear'}
         cancelText="Cancelar"
+        type="danger"
       />
     </S.AccessManagementView>
   )
