@@ -28,8 +28,6 @@ import HomeView from '@/screens/DashboardScreen/views/Home'
 import UsersListView from '@/screens/DashboardScreen/views/UsersList'
 import AdsListView from '@/screens/DashboardScreen/views/AdsList'
 import AdsApprovalView from '@/screens/DashboardScreen/views/AdsApproval'
-import CategoriesManagementView from '@/screens/DashboardScreen/views/CategoriesManagement'
-import SportsManagementView from '@/screens/DashboardScreen/views/SportsManagement'
 import BannersManagementView from '@/screens/DashboardScreen/views/BannersManagement'
 import AdvertisingManagementView from '@/screens/DashboardScreen/views/AdvertisingManagement'
 import ReportsUsersView from '@/screens/DashboardScreen/views/ReportsUsers'
@@ -102,28 +100,6 @@ export const ADMIN_MENUS: IMenu[] = [
   //     menuHidden: false
   //   },
 
-  // Categoria: Dados
-  {
-    menuId: 'categorias',
-    menuName: 'Categorias',
-    menuLegend: 'Gerenciar categorias de produtos',
-    menuIcon: <LuLayoutGrid />,
-    menuView: <CategoriesManagementView />,
-    menuCategory: 'Dados',
-    menuDisabled: false,
-    menuHidden: false
-  },
-  {
-    menuId: 'esportes',
-    menuName: 'Esportes',
-    menuLegend: 'Gerenciar lista de esportes disponíveis',
-    menuIcon: <LuLayoutList />,
-    menuView: <SportsManagementView />,
-    menuCategory: 'Dados',
-    menuDisabled: false,
-    menuHidden: false
-  },
-
   // Categoria: Estilizações
   {
     menuId: 'banners',
@@ -138,7 +114,7 @@ export const ADMIN_MENUS: IMenu[] = [
   {
     menuId: 'publicidade',
     menuName: 'Publicidade',
-    menuLegend: '',
+    menuLegend: 'Gerenciar campanhas publicitárias na plataforma',
     menuIcon: <LuMegaphone />,
     menuView: <AdvertisingManagementView />,
     menuCategory: 'Layout',
