@@ -5,15 +5,21 @@ import { GetProp, MenuProps } from 'antd'
 import {
   LuChartColumnBig,
   LuCircleUser,
+  LuFileText,
   LuGrid2X2,
   LuGrid2X2Check,
   LuHouse,
+  LuImage,
   LuKeyRound,
   LuLayoutGrid,
   LuLayoutList,
   LuLogOut,
+  LuMail,
   LuMegaphone,
+  LuMessageSquare,
   LuSettings,
+  LuShield,
+  LuTrophy,
   LuUsers
 } from 'react-icons/lu'
 
@@ -24,10 +30,18 @@ import AdsListView from '@/screens/DashboardScreen/views/AdsList'
 import AdsApprovalView from '@/screens/DashboardScreen/views/AdsApproval'
 import CategoriesManagementView from '@/screens/DashboardScreen/views/CategoriesManagement'
 import SportsManagementView from '@/screens/DashboardScreen/views/SportsManagement'
-import ConditionsManagementView from '@/screens/DashboardScreen/views/ConditionsManagement'
+import BannersManagementView from '@/screens/DashboardScreen/views/BannersManagement'
+import AdvertisingManagementView from '@/screens/DashboardScreen/views/AdvertisingManagement'
 import ReportsUsersView from '@/screens/DashboardScreen/views/ReportsUsers'
 import ReportsAdsView from '@/screens/DashboardScreen/views/ReportsAds'
 import SettingsGeneralView from '@/screens/DashboardScreen/views/SettingsGeneral'
+import ChatsManagementView from '@/screens/DashboardScreen/views/ChatsManagement'
+import TournamentsManagementView from '@/screens/DashboardScreen/views/TournamentsManagement'
+import AccessManagementView from '@/screens/DashboardScreen/views/AccessManagement'
+import TermsManagementView from '@/screens/DashboardScreen/views/TermsManagement'
+import SecuritySettingsView from '@/screens/DashboardScreen/views/SecuritySettings'
+import NotificationsManagementView from '@/screens/DashboardScreen/views/NotificationsManagement'
+import MyAccountView from '@/screens/DashboardScreen/views/MyAccount'
 
 // Interface do Menu
 export interface IMenu {
@@ -76,6 +90,17 @@ export const ADMIN_MENUS: IMenu[] = [
     menuDisabled: false,
     menuHidden: false
   },
+  //   {
+  //     menuId: 'engajamento-relatorios',
+  //     menuName: 'Relatório de Engajamento',
+  //     menuLegend: 'Análise de interações e chats',
+  //     menuIcon: <LuChartColumnBig />,
+  //     // menuView: <ReportsEngagementView />,
+  //     menuView: <></>,
+  //     menuCategory: 'Relatórios',
+  //     menuDisabled: true,
+  //     menuHidden: false
+  //   },
 
   // Categoria: Dados
   {
@@ -98,13 +123,25 @@ export const ADMIN_MENUS: IMenu[] = [
     menuDisabled: false,
     menuHidden: false
   },
+
+  // Categoria: Estilizações
   {
-    menuId: 'condicoes',
-    menuName: 'Condições',
-    menuLegend: 'Gerenciar estados dos produtos',
-    menuIcon: <LuLayoutList />,
-    menuView: <ConditionsManagementView />,
-    menuCategory: 'Dados',
+    menuId: 'banners',
+    menuName: 'Banners',
+    menuLegend: 'Gerenciar banners promocionais na plataforma',
+    menuIcon: <LuImage />,
+    menuView: <BannersManagementView />,
+    menuCategory: 'Layout',
+    menuDisabled: false,
+    menuHidden: false
+  },
+  {
+    menuId: 'publicidade',
+    menuName: 'Publicidade',
+    menuLegend: '',
+    menuIcon: <LuMegaphone />,
+    menuView: <AdvertisingManagementView />,
+    menuCategory: 'Layout',
     menuDisabled: false,
     menuHidden: false
   },
@@ -140,14 +177,77 @@ export const ADMIN_MENUS: IMenu[] = [
     menuDisabled: false,
     menuHidden: false
   },
+  {
+    menuId: 'conversas',
+    menuName: 'Conversas',
+    menuLegend: 'Monitorar e gerenciar chats entre usuários',
+    menuIcon: <LuMessageSquare />,
+    menuView: <ChatsManagementView />,
+    menuCategory: 'Gerenciamento',
+    menuDisabled: false,
+    menuHidden: false
+  },
+  {
+    menuId: 'torneios',
+    menuName: 'Torneios',
+    menuLegend: 'Gerenciar lista de torneios para o centro de interesse',
+    menuIcon: <LuTrophy />,
+    menuView: <TournamentsManagementView />,
+    menuCategory: 'Gerenciamento',
+    menuDisabled: false,
+    menuHidden: false
+  },
+  {
+    menuId: 'notificacoes',
+    menuName: 'Notificações',
+    menuLegend: 'Gerenciar templates de notificações',
+    menuIcon: <LuMail />,
+    menuView: <NotificationsManagementView />,
+
+    menuCategory: 'Gerenciamento',
+    menuDisabled: false,
+    menuHidden: false
+  },
 
   // Categoria: Configurações
-
   {
     menuId: 'acessos',
     menuName: 'Acessos',
     menuLegend: 'Gerenciamento de acessos ao painel de administrador',
     menuIcon: <LuKeyRound />,
+    menuView: <AccessManagementView />,
+
+    menuCategory: 'Configurações',
+    menuDisabled: false,
+    menuHidden: false
+  },
+  {
+    menuId: 'seguranca',
+    menuName: 'Segurança',
+    menuLegend: 'Configurações de segurança e privacidade',
+    menuIcon: <LuShield />,
+    menuView: <SecuritySettingsView />,
+
+    menuCategory: 'Configurações',
+    menuDisabled: false,
+    menuHidden: false
+  },
+  {
+    menuId: 'termos',
+    menuName: 'Termos e Políticas',
+    menuLegend: 'Gerenciar termos de uso e políticas',
+    menuIcon: <LuFileText />,
+    menuView: <TermsManagementView />,
+
+    menuCategory: 'Configurações',
+    menuDisabled: false,
+    menuHidden: false
+  },
+  {
+    menuId: 'configuracoes',
+    menuName: 'Configurações Gerais',
+    menuLegend: 'Configurações gerais da plataforma',
+    menuIcon: <LuSettings />,
     menuView: <SettingsGeneralView />,
     menuCategory: 'Configurações',
     menuDisabled: false,
@@ -158,20 +258,10 @@ export const ADMIN_MENUS: IMenu[] = [
     menuName: 'Minha Conta',
     menuLegend: 'Dados gerais da sua conta',
     menuIcon: <LuCircleUser />,
-    menuView: <SettingsGeneralView />,
+    menuView: <MyAccountView />,
     menuCategory: 'Configurações',
     menuDisabled: false,
     menuHidden: true
-  },
-  {
-    menuId: 'configuracoes',
-    menuName: 'Configurações',
-    menuLegend: 'Configurações gerais da plataforma',
-    menuIcon: <LuSettings />,
-    menuView: <SettingsGeneralView />,
-    menuCategory: 'Configurações',
-    menuDisabled: false,
-    menuHidden: false
   }
 ]
 
@@ -224,7 +314,7 @@ export const formatMenusForAntDesign = (): GetProp<MenuProps, 'items'> => {
           icon: menu.menuIcon,
           label: menu.menuName,
           disabled: menu.menuDisabled,
-          title: menu.menuLegend
+          title: menu.menuName
         }))
       }
     })

@@ -24,6 +24,7 @@ export const DashboardSideMenu = styled.div<{ opened: number }>`
     opened
       ? Globals.dashboard.menuWidth.opened
       : Globals.dashboard.menuWidth.closed};
+  height: 100vh;
   transition: 0.3s;
 
   border-right: 1px solid ${() => useToken().token.colorBorderSecondary};
@@ -60,12 +61,30 @@ export const DashboardSideMenuWrapper = styled.div`
   display: flex;
   width: 100%;
   height: calc(100% - ${Globals.dashboard.headerHeight});
-  padding: 10px;
+  padding-left: 10px;
 
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.08);
 `
 
-export const DashboardMenu = styled(FormattedMenu)``
+export const DashboardMenu = styled(FormattedMenu)`
+  overflow: auto;
+  padding-bottom: 15px;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+    border-radius: 10px;
+    z-index: 1000;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: ${Colors.scrollbarTrack};
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background: ${Colors.scrollbarThumb};
+  }
+`
 
 // =================================================== DASHBOARD MAIN
 
@@ -120,7 +139,7 @@ export const DashboardMainViewsWrapper = styled.div`
   width: 100%;
   height: calc(100% - ${Globals.dashboard.headerHeight});
   overflow: auto;
-  padding: ${Globals.dashboard.padding} 0;
+  padding: ${Globals.dashboard.padding};
 
   background-color: rgba(0, 0, 0, 0.02);
 

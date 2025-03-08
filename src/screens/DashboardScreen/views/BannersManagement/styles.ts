@@ -1,10 +1,10 @@
 import styled from 'styled-components'
 import { View, ViewContent } from '@/utils/styles/common'
 
-export const ConditionsManagementView = styled(View)`
+export const BannersManagementView = styled(View)`
   display: flex;
 `
 
-export const ConditionsManagementViewContent = styled(ViewContent)`
+export const BannersManagementViewContent = styled(ViewContent)`
   display: flex;
 `
