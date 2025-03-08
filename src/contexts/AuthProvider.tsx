@@ -1,5 +1,3 @@
-// src/contexts/TemplateProvider.tsx
-
 import {
   createContext,
   useContext,
@@ -8,18 +6,20 @@ import {
   ReactNode
 } from 'react'
 import { onAuthStateChanged, User } from 'firebase/auth'
+import { message } from 'antd'
 import { auth } from '@/firebase/config'
 import {
   loginAdmin,
   logoutAdmin,
   resetPassword,
   completeFirstAccess,
-  checkFirstAccess
+  checkAdminStatus,
+  getAdminByEmail
 } from '@/services/authService'
-import { AdminProfile } from '@/types'
+import { IAdminProfile } from '@/types'
 
 interface AuthContextData {
-  admin: AdminProfile | null
+  admin: IAdminProfile | null
   isAuthenticated: boolean
   loading: boolean
   login: (email: string, password: string) => Promise<void>
@@ -35,17 +35,20 @@ interface AuthContextData {
 const AuthContext = createContext<AuthContextData>({} as AuthContextData)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [admin, setAdmin] = useState<AdminProfile | null>(null)
+  const [admin, setAdmin] = useState<IAdminProfile | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
       if (user) {
-        const adminData = await checkFirstAccess(user.uid)
-        if (adminData) {
-          setAdmin({ ...adminData, id: user.uid })
+        const adminData = await checkAdminStatus(user.uid)
+        if (adminData && !adminData.firstAccessPending) {
+          setAdmin(adminData)
           setIsAuthenticated(true)
+        } else {
+          setAdmin(null)
+          setIsAuthenticated(false)
         }
       } else {
         setAdmin(null)
@@ -58,11 +61,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [])
 
   const login = async (email: string, password: string) => {
-    const userCredential = await loginAdmin(email, password)
-    const adminData = await checkFirstAccess(userCredential.user.uid)
-    if (adminData) {
-      setAdmin({ ...adminData, id: userCredential.user.uid })
-      setIsAuthenticated(true)
+    try {
+      const userCredential = await loginAdmin(email, password)
+      const adminData = await checkAdminStatus(userCredential.user.uid)
+      if (adminData && !adminData.firstAccessPending) {
+        setAdmin(adminData)
+        setIsAuthenticated(true)
+        message.success('SignIn realizado com sucesso!')
+      } else {
+        throw new Error('FIRST_ACCESS_PENDING')
+      }
+    } catch (error: any) {
+      if (error.message === 'FIRST_ACCESS_PENDING') {
+        const pendingAdmin = await getAdminByEmail(email)
+        if (pendingAdmin && pendingAdmin.firstAccessPending) {
+          message.info('Primeiro acesso detectado. Complete seu cadastro.')
+          throw error
+        } else {
+          message.error('Nenhum cadastro encontrado para este e-mail.')
+        }
+      } else {
+        message.error(error.message || 'Erro ao fazer login.')
+      }
+      throw error
     }
   }
 
@@ -70,10 +91,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await logoutAdmin()
     setAdmin(null)
     setIsAuthenticated(false)
+    message.success('Logout realizado com sucesso!')
   }
 
   const handleResetPassword = async (email: string) => {
     await resetPassword(email)
+    message.success('E-mail de recuperação enviado!')
   }
 
   const handleCompleteFirstAccess = async (
@@ -81,12 +104,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     password: string,
     name: string
   ) => {
-    await completeFirstAccess(email, password, name)
-    const adminData = await checkFirstAccess(auth.currentUser!.uid)
-    if (adminData) {
-      setAdmin({ ...adminData, id: auth.currentUser!.uid })
-      setIsAuthenticated(true)
-    }
+    const adminData = await completeFirstAccess(email, password, name)
+    setAdmin(adminData)
+    setIsAuthenticated(true)
+    message.success('Primeiro acesso concluído com sucesso!')
   }
 
   const contextValue: AuthContextData = {

@@ -1,15 +1,14 @@
 import {
   signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   sendPasswordResetEmail,
   signOut,
-  updatePassword,
   UserCredential
 } from 'firebase/auth'
-import { ref, set, get, child } from 'firebase/database'
+import { ref, set, get, remove } from 'firebase/database'
 import { auth, db } from '@/firebase/config'
-import { AdminProfile } from '@/types'
+import { IAdminProfile } from '@/types'
 
-// Função de login
 export const loginAdmin = async (
   email: string,
   password: string
@@ -17,50 +16,86 @@ export const loginAdmin = async (
   return signInWithEmailAndPassword(auth, email, password)
 }
 
-// Função de primeiro acesso (atualiza senha e dados do admin)
-export const completeFirstAccess = async (
-  email: string,
-  password: string,
-  name: string
-): Promise<void> => {
-  const user = auth.currentUser
-  if (!user) throw new Error('Nenhum usuário autenticado')
-
-  // Atualiza a senha
-  await updatePassword(user, password)
-
-  // Salva os dados adicionais no Realtime Database em "admins/{uid}"
-  const adminRef = ref(db, `admins/${user.uid}`)
-  await set(adminRef, {
-    email,
-    name,
-    createdAt: new Date().toISOString(),
-    firstAccessPending: false,
-    updatedAt: new Date().toISOString()
-  })
-}
-
-// Função para verificar se é primeiro acesso
-export const checkFirstAccess = async (
+export const checkAdminStatus = async (
   uid: string
-): Promise<AdminProfile | null> => {
+): Promise<IAdminProfile | null> => {
   const adminRef = ref(db, `admins/${uid}`)
   const snapshot = await get(adminRef)
   return snapshot.exists() ? { id: uid, ...snapshot.val() } : null
 }
 
-// Função de logout
+export const getAdminByEmail = async (
+  email: string
+): Promise<IAdminProfile | null> => {
+  const adminsRef = ref(db, 'admins')
+  const snapshot = await get(adminsRef)
+  if (snapshot.exists()) {
+    const admins = snapshot.val()
+    const adminEntry = Object.entries(admins).find(
+      ([, admin]: [string, any]) => admin.email === email
+    )
+    if (adminEntry) {
+      const [id, adminData] = adminEntry
+      return { id, ...(adminData as object) } as IAdminProfile
+    }
+  }
+  return null
+}
+
+export const completeFirstAccess = async (
+  email: string,
+  password: string,
+  name: string
+): Promise<IAdminProfile> => {
+  const existingAdmin = await getAdminByEmail(email)
+  if (!existingAdmin || !existingAdmin.firstAccessPending) {
+    throw new Error(
+      'Nenhum primeiro acesso pendente encontrado para este e-mail.'
+    )
+  }
+
+  const userCredential = await createUserWithEmailAndPassword(
+    auth,
+    email,
+    password
+  )
+  await remove(ref(db, `admins/${existingAdmin.id}`))
+
+  const adminRef = ref(db, `admins/${userCredential.user.uid}`)
+  const adminData: IAdminProfile = {
+    id: userCredential.user.uid,
+    email,
+    name,
+    createdAt: existingAdmin.createdAt,
+    updatedAt: new Date().toISOString(),
+    firstAccessPending: false
+  }
+  await set(adminRef, adminData)
+
+  return adminData
+}
+
 export const logoutAdmin = async (): Promise<void> => {
   await signOut(auth)
 }
 
-// Função de recuperação de senha
 export const resetPassword = async (email: string): Promise<void> => {
   await sendPasswordResetEmail(auth, email)
 }
 
-// Função para criar acesso (será implementada depois)
 export const createAdminAccess = async (email: string): Promise<void> => {
-  // Lógica a ser implementada por outro admin
-  console.log(`Criação de acesso para ${email} - A ser implementado`)
+  const tempId = `pending_${Date.now()}`
+  const adminRef = ref(db, `admins/${tempId}`)
+  const existingAdmin = await getAdminByEmail(email)
+
+  if (existingAdmin) {
+    throw new Error('E-mail já registrado.')
+  }
+
+  await set(adminRef, {
+    id: tempId,
+    email,
+    createdAt: new Date().toISOString(),
+    firstAccessPending: true
+  })
 }

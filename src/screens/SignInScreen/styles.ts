@@ -57,9 +57,20 @@ export const SignInHeader = styled.div`
 `
 
 export const SignInForm = styled(FormattedForm)`
+  align-items: center;
+
   button {
     width: 100% !important;
   }
+`
+
+export const SignInFormSection = styled.div<{
+  active: number
+}>`
+  display: ${({ active }) => (active ? 'flex' : 'none')};
+  flex-direction: column;
+  row-gap: 12px;
+  width: 100%;
 `
 
 export const SignInFormFooter = styled.div`
@@ -72,17 +83,26 @@ export const SignInFormFooter = styled.div`
   }
 `
 
-export const SignInFirstAccess = styled.div<{ active: number }>`
-  margin-top: 16px;
+export const SignInFirstAccess = styled.div<{
+  active: number
+  disabled: number
+}>`
+  position: absolute;
+  top: 100%;
+  margin-top: 15px;
   transition: 0.3s;
   cursor: pointer;
+  pointer-events: ${({ disabled }) => (disabled ? 'none' : 'all')};
 
   font-size: ${Fonts.xxxs};
 
-  color: ${() => useToken().token.colorTextLabel};
+  color: ${({ disabled }) =>
+    disabled
+      ? useToken().token.colorTextDescription
+      : useToken().token.colorTextLabel};
 
   &:hover {
-    opacity: 0.8;
+    opacity: ${({ disabled }) => (disabled ? '1' : '0.8')};
   }
 `
 
