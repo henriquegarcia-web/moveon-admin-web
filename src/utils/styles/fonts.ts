@@ -1,3 +1,5 @@
+// src/utils/styles/fonts.ts
+
 const Fonts = {
   xxxs: '0.75rem',
   xxs: '0.813rem',

@@ -1,3 +1,5 @@
+// src/utils/styles/globals.ts
+
 import styled, { createGlobalStyle } from 'styled-components'
 
 import Colors from './colors'

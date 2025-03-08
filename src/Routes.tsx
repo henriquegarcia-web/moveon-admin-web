@@ -1,8 +1,9 @@
 // src/routes.tsx
-
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { useAuth } from '@/contexts/AuthProvider'
+
 import { SignInScreen, DashboardScreen } from '@/screens'
+import { useAuth } from '@/contexts/AuthProvider'
+import { ViewsProvider } from '@/contexts/ViewsProvider'
 
 interface RouteProps {
   children: React.ReactNode
@@ -18,7 +19,7 @@ const PublicRoute = ({ children }: RouteProps) => {
   const { isAuthenticated, loading } = useAuth()
   if (loading) return <div>Carregando...</div>
   return isAuthenticated ? (
-    <Navigate to="/dashboard" replace />
+    <Navigate to="/admin/home" replace />
   ) : (
     <>{children}</>
   )
@@ -37,10 +38,12 @@ const AppRoutes = () => {
           }
         />
         <Route
-          path="/dashboard"
+          path="/admin/:menuId?"
           element={
             <PrivateRoute>
-              <DashboardScreen />
+              <ViewsProvider>
+                <DashboardScreen />
+              </ViewsProvider>
             </PrivateRoute>
           }
         />
