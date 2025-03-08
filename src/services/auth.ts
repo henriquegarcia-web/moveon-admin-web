@@ -7,14 +7,19 @@ import {
   signOut,
   UserCredential
 } from 'firebase/auth'
-import { ref, set, get, remove } from 'firebase/database'
+import { ref, set, get, remove, update } from 'firebase/database'
 import { auth, db } from '@/firebase/config'
+
 import { IAdminProfile } from '@/types'
 
 export const loginAdmin = async (
   email: string,
   password: string
 ): Promise<UserCredential> => {
+  const admin = await getAdminByEmail(email)
+  if (admin?.isBlocked) {
+    throw new Error('Este administrador está bloqueado.')
+  }
   return signInWithEmailAndPassword(auth, email, password)
 }
 
@@ -70,7 +75,8 @@ export const completeFirstAccess = async (
     name,
     createdAt: existingAdmin.createdAt,
     updatedAt: new Date().toISOString(),
-    firstAccessPending: false
+    firstAccessPending: false,
+    isBlocked: false
   }
   await set(adminRef, adminData)
 
@@ -98,6 +104,22 @@ export const createAdminAccess = async (email: string): Promise<void> => {
     id: tempId,
     email,
     createdAt: new Date().toISOString(),
-    firstAccessPending: true
+    firstAccessPending: true,
+    isBlocked: false
+  })
+}
+
+export const blockAdminAccess = async (
+  adminId: string,
+  block: boolean
+): Promise<void> => {
+  const adminRef = ref(db, `admins/${adminId}`)
+  const snapshot = await get(adminRef)
+  if (!snapshot.exists()) {
+    throw new Error('Administrador não encontrado.')
+  }
+  await update(adminRef, {
+    isBlocked: block,
+    updatedAt: new Date().toISOString()
   })
 }

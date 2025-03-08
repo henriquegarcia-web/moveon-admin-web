@@ -7,4 +7,5 @@ export interface IAdminProfile {
   createdAt: string
   updatedAt?: string
   firstAccessPending: boolean
+  isBlocked?: boolean;
 }

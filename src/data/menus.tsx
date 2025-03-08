@@ -11,8 +11,6 @@ import {
   LuHouse,
   LuImage,
   LuKeyRound,
-  LuLayoutGrid,
-  LuLayoutList,
   LuLogOut,
   LuMail,
   LuMegaphone,
@@ -40,6 +38,8 @@ import TermsManagementView from '@/screens/DashboardScreen/views/TermsManagement
 import SecuritySettingsView from '@/screens/DashboardScreen/views/SecuritySettings'
 import NotificationsManagementView from '@/screens/DashboardScreen/views/NotificationsManagement'
 import MyAccountView from '@/screens/DashboardScreen/views/MyAccount'
+
+import { SettingsProvider } from '@/contexts/SettingsProvider'
 
 // Interface do Menu
 export interface IMenu {
@@ -191,8 +191,11 @@ export const ADMIN_MENUS: IMenu[] = [
     menuName: 'Acessos',
     menuLegend: 'Gerenciamento de acessos ao painel de administrador',
     menuIcon: <LuKeyRound />,
-    menuView: <AccessManagementView />,
-
+    menuView: (
+      <SettingsProvider>
+        <AccessManagementView />
+      </SettingsProvider>
+    ),
     menuCategory: 'Configurações',
     menuDisabled: false,
     menuHidden: false
