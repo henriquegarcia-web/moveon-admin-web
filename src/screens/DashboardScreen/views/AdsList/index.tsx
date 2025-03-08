@@ -1,5 +1,5 @@
 // src/screens/DashboardScreen/views/AdsListView/index.tsx
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import * as S from './styles'
 import { LuTrash, LuSquarePen, LuEye, LuPlus } from 'react-icons/lu'
 import { Button, Tag, Form, Select, Input, Upload, message } from 'antd'
@@ -15,39 +15,45 @@ import {
   uploadFileToFirebase,
   getBase64
 } from '@/utils/functions/uploadUtils'
-import { useAds } from '@/contexts/AdsProvider'
 import { PiSpinnerGap } from 'react-icons/pi'
+import axios from 'axios'
+import { useAds } from '@/contexts/AdsProvider'
 
-// Schema de validação para criação/edição de anúncio
+// Schema de validação ajustado com base no mobile
 const adSchema = yup
   .object({
-    title: yup.string().required('Título é obrigatório'),
-    description: yup.string().required('Descrição é obrigatória'),
+    title: yup
+      .string()
+      .required('O título é obrigatório')
+      .max(70, 'O título deve ter no máximo 70 caracteres'),
+    description: yup
+      .string()
+      .required('A descrição é obrigatória')
+      .min(10, 'A descrição deve ter pelo menos 10 caracteres'),
     price: yup
       .number()
-      .required('Preço é obrigatório')
-      .min(0, 'Preço deve ser positivo'),
-    categoryId: yup.string().required('Categoria é obrigatória'),
+      .required('O preço é obrigatório')
+      .min(1, 'O preço deve ser maior que 0')
+      .typeError('Digite um valor numérico válido'),
+    categoryId: yup.string().required('Selecione uma categoria'),
     condition: yup
       .string()
-      .oneOf(['new', 'semi_new', 'used'])
-      .required('Condição é obrigatória'),
-    location: yup
-      .object({
-        address: yup.string().required('Endereço é obrigatório'),
-        lat: yup.number().required('Latitude é obrigatória'),
-        lng: yup.number().required('Longitude é obrigatória')
-      })
-      .required(),
+      .oneOf(['new', 'semi_new', 'used'], 'Selecione uma condição válida')
+      .required('Selecione a condição do item'),
+    location: yup.object().shape({
+      cep: yup
+        .string()
+        .required('O CEP é obrigatório')
+        .matches(/^\d{5}-?\d{3}$/, 'CEP inválido'),
+      address: yup.string().required('O endereço é obrigatório')
+    }),
     photos: yup
       .array()
       .of(yup.string())
-      .min(1, 'Pelo menos uma foto é obrigatória'),
+      .min(1, 'Adicione pelo menos uma foto')
+      .max(6, 'Máximo de 6 fotos permitido')
+      .required('Adicione pelo menos uma foto'),
     video: yup.string().optional(),
-    contactMethod: yup
-      .string()
-      .oneOf(['chat', 'whatsapp', 'phone'])
-      .required('Método de contato é obrigatório'),
     status: yup
       .string()
       .oneOf(['pending', 'published', 'editing', 'rejected', 'sold', 'removed'])
@@ -75,22 +81,47 @@ const AdsListView = () => {
     handleSubmit,
     formState: { errors, isSubmitting, isValid },
     reset,
-    setValue
+    setValue,
+    watch
   } = useForm<AdFormData>({
     resolver: yupResolver(adSchema),
     defaultValues: {
       title: '',
       description: '',
-      price: 0,
+      price: undefined,
       categoryId: '',
       condition: 'new',
-      location: { address: '', lat: 0, lng: 0 },
+      location: { cep: '', address: '' },
       photos: [],
       video: '',
-      contactMethod: 'chat',
       status: 'pending'
     }
   })
+
+  // Busca automática de endereço por CEP usando ViaCEP
+  const cepValue = watch('location.cep')
+  useEffect(() => {
+    const fetchAddressFromCep = async (cep: string) => {
+      if (cep && cep.match(/^\d{5}-?\d{3}$/)) {
+        try {
+          const response = await axios.get(
+            `https://viacep.com.br/ws/${cep.replace('-', '')}/json/`
+          )
+          if (!response.data.erro) {
+            setValue(
+              'location.address',
+              `${response.data.logradouro}, ${response.data.bairro}, ${response.data.localidade} - ${response.data.uf}`
+            )
+          } else {
+            message.error('CEP inválido.')
+          }
+        } catch (error) {
+          message.error('Erro ao buscar o CEP.')
+        }
+      }
+    }
+    fetchAddressFromCep(cepValue)
+  }, [cepValue, setValue])
 
   // Filtragem dos anúncios
   const filteredAds = ads.filter(
@@ -218,9 +249,7 @@ const AdsListView = () => {
   const onCreateAdSubmit = async (data: AdFormData) => {
     await createAd({
       ...data,
-      photos: (data.photos ?? []).filter(
-        (photo) => photo !== undefined
-      ) as string[]
+      photos: data.photos.filter((photo) => photo !== undefined) as string[]
     })
     setCreateModalVisible(false)
     reset()
@@ -231,7 +260,7 @@ const AdsListView = () => {
     if (selectedAd) {
       await updateAd(selectedAd.id, {
         ...data,
-        photos: (data.photos ?? []).filter((photo) => photo !== undefined)
+        photos: data.photos.filter((photo) => photo !== undefined)
       })
       setEditModalVisible(false)
       reset()
@@ -260,7 +289,12 @@ const AdsListView = () => {
     { key: 'condition', label: 'Condição' },
     {
       key: 'location',
-      label: 'Localização',
+      label: 'CEP',
+      render: (value: IAd['location']) => value.cep
+    },
+    {
+      key: 'location',
+      label: 'Endereço',
       render: (value: IAd['location']) => value.address
     },
     {
@@ -328,7 +362,7 @@ const AdsListView = () => {
             control={control}
             render={({ field }) => (
               <Form.Item
-                label="Fotos (mínimo 1)"
+                label="Fotos (mínimo 1, máximo 6)"
                 validateStatus={errors.photos ? 'error' : ''}
                 help={errors.photos?.message}
               >
@@ -340,15 +374,15 @@ const AdsListView = () => {
                   onChange={handleImageChange}
                   customRequest={({ onSuccess }) =>
                     onSuccess && onSuccess('ok')
-                  } // Simula sucesso para o Ant Design
-                  fileList={(field.value ?? []).map((url, index) => ({
+                  }
+                  fileList={field.value.map((url, index) => ({
                     uid: `${index}`,
                     name: `image-${index}`,
                     status: 'done',
                     url
                   }))}
                 >
-                  {(field.value?.length ?? 0) < 5 && uploadButton(imageLoading)}
+                  {field.value.length < 6 && uploadButton(imageLoading)}
                 </Upload>
               </Form.Item>
             )}
@@ -359,7 +393,7 @@ const AdsListView = () => {
             control={control}
             render={({ field }) => (
               <Form.Item
-                label="Vídeo (opcional)"
+                label="Vídeo (opcional, máximo 1)"
                 validateStatus={errors.video ? 'error' : ''}
                 help={errors.video?.message}
               >
@@ -398,7 +432,7 @@ const AdsListView = () => {
                 validateStatus={errors.title ? 'error' : ''}
                 help={errors.title?.message}
               >
-                <Input {...field} />
+                <Input {...field} placeholder="Ex.: Bicicleta Caloi Aro 29" />
               </Form.Item>
             )}
           />
@@ -411,7 +445,10 @@ const AdsListView = () => {
                 validateStatus={errors.description ? 'error' : ''}
                 help={errors.description?.message}
               >
-                <Input.TextArea {...field} />
+                <Input.TextArea
+                  {...field}
+                  placeholder="Ex.: Bicicleta em ótimo estado, usada por 6 meses"
+                />
               </Form.Item>
             )}
           />
@@ -420,7 +457,7 @@ const AdsListView = () => {
             control={control}
             render={({ field }) => (
               <Form.Item
-                label="Preço"
+                label="Preço (R$)"
                 validateStatus={errors.price ? 'error' : ''}
                 help={errors.price?.message}
               >
@@ -428,7 +465,10 @@ const AdsListView = () => {
                   type="number"
                   {...field}
                   value={field.value || ''}
-                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                  onChange={(e) =>
+                    field.onChange(parseFloat(e.target.value) || 0)
+                  }
+                  placeholder="Ex.: 500.00"
                 />
               </Form.Item>
             )}
@@ -442,7 +482,16 @@ const AdsListView = () => {
                 validateStatus={errors.categoryId ? 'error' : ''}
                 help={errors.categoryId?.message}
               >
-                <Input {...field} />
+                <Select
+                  {...field}
+                  placeholder="Selecione uma categoria"
+                  options={[
+                    { value: '', label: 'Selecione uma categoria' },
+                    // Adicione categorias dinâmicas aqui, ex.: vindo do contexto
+                    { value: '1', label: 'Bicicletas' },
+                    { value: '2', label: 'Eletrônicos' }
+                  ]}
+                />
               </Form.Item>
             )}
           />
@@ -457,12 +506,27 @@ const AdsListView = () => {
               >
                 <Select
                   {...field}
+                  placeholder="Selecione a condição"
                   options={[
+                    { value: '', label: 'Selecione a condição' },
                     { value: 'new', label: 'Novo' },
                     { value: 'semi_new', label: 'Seminovo' },
                     { value: 'used', label: 'Usado' }
                   ]}
                 />
+              </Form.Item>
+            )}
+          />
+          <Controller
+            name="location.cep"
+            control={control}
+            render={({ field }) => (
+              <Form.Item
+                label="CEP"
+                validateStatus={errors.location?.cep ? 'error' : ''}
+                help={errors.location?.cep?.message}
+              >
+                <Input {...field} placeholder="Ex.: 12345-678" />
               </Form.Item>
             )}
           />
@@ -475,66 +539,15 @@ const AdsListView = () => {
                 validateStatus={errors.location?.address ? 'error' : ''}
                 help={errors.location?.address?.message}
               >
-                <Input {...field} />
-              </Form.Item>
-            )}
-          />
-          <Controller
-            name="location.lat"
-            control={control}
-            render={({ field }) => (
-              <Form.Item
-                label="Latitude"
-                validateStatus={errors.location?.lat ? 'error' : ''}
-                help={errors.location?.lat?.message}
-              >
                 <Input
-                  type="number"
                   {...field}
-                  value={field.value || ''}
-                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                  placeholder="Ex.: Rua das Flores, 123, São Paulo - SP"
+                  disabled
                 />
               </Form.Item>
             )}
           />
-          <Controller
-            name="location.lng"
-            control={control}
-            render={({ field }) => (
-              <Form.Item
-                label="Longitude"
-                validateStatus={errors.location?.lng ? 'error' : ''}
-                help={errors.location?.lng?.message}
-              >
-                <Input
-                  type="number"
-                  {...field}
-                  value={field.value || ''}
-                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                />
-              </Form.Item>
-            )}
-          />
-          <Controller
-            name="contactMethod"
-            control={control}
-            render={({ field }) => (
-              <Form.Item
-                label="Método de Contato"
-                validateStatus={errors.contactMethod ? 'error' : ''}
-                help={errors.contactMethod?.message}
-              >
-                <Select
-                  {...field}
-                  options={[
-                    { value: 'chat', label: 'Chat' },
-                    { value: 'whatsapp', label: 'WhatsApp' },
-                    { value: 'phone', label: 'Telefone' }
-                  ]}
-                />
-              </Form.Item>
-            )}
-          />
+
           <Controller
             name="status"
             control={control}
@@ -670,43 +683,7 @@ const AdsListView = () => {
                 validateStatus={errors.location?.address ? 'error' : ''}
                 help={errors.location?.address?.message}
               >
-                <Input {...field} />
-              </Form.Item>
-            )}
-          />
-          <Controller
-            name="location.lat"
-            control={control}
-            render={({ field }) => (
-              <Form.Item
-                label="Latitude"
-                validateStatus={errors.location?.lat ? 'error' : ''}
-                help={errors.location?.lat?.message}
-              >
-                <Input
-                  type="number"
-                  {...field}
-                  value={field.value || ''}
-                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                />
-              </Form.Item>
-            )}
-          />
-          <Controller
-            name="location.lng"
-            control={control}
-            render={({ field }) => (
-              <Form.Item
-                label="Longitude"
-                validateStatus={errors.location?.lng ? 'error' : ''}
-                help={errors.location?.lng?.message}
-              >
-                <Input
-                  type="number"
-                  {...field}
-                  value={field.value || ''}
-                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                />
+                <Input {...field} disabled />
               </Form.Item>
             )}
           />
@@ -737,26 +714,6 @@ const AdsListView = () => {
                 help={errors.video?.message}
               >
                 <Input {...field} />
-              </Form.Item>
-            )}
-          />
-          <Controller
-            name="contactMethod"
-            control={control}
-            render={({ field }) => (
-              <Form.Item
-                label="Método de Contato"
-                validateStatus={errors.contactMethod ? 'error' : ''}
-                help={errors.contactMethod?.message}
-              >
-                <Select
-                  {...field}
-                  options={[
-                    { value: 'chat', label: 'Chat' },
-                    { value: 'whatsapp', label: 'WhatsApp' },
-                    { value: 'phone', label: 'Telefone' }
-                  ]}
-                />
               </Form.Item>
             )}
           />

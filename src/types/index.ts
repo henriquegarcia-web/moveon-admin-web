@@ -112,13 +112,11 @@ export interface IAd {
   categoryId: string
   condition: 'new' | 'semi_new' | 'used'
   location: {
-    lat: number
-    lng: number
+    cep: string
     address: string
   }
   photos: string[]
   video?: string
-  contactMethod: 'chat' | 'whatsapp' | 'phone'
   status: AdStatus
   createdAt: string
   updatedAt?: string
