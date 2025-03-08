@@ -1,3 +1,5 @@
+// src/types/index.ts
+
 export interface IAdminProfile {
   id: string
   email: string

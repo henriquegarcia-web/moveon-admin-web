@@ -1,3 +1,5 @@
+// src/contexts/AuthProvider.tsx
+
 import {
   createContext,
   useContext,
@@ -15,7 +17,7 @@ import {
   completeFirstAccess,
   checkAdminStatus,
   getAdminByEmail
-} from '@/services/authService'
+} from '@/services/auth'
 import { IAdminProfile } from '@/types'
 
 interface AuthContextData {

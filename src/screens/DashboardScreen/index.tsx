@@ -1,3 +1,5 @@
+// src/screens/DashboardScreen/index.tsx
+
 import * as S from './styles'
 
 import { useAuth } from '@/contexts/AuthProvider'

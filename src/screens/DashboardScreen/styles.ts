@@ -1,3 +1,5 @@
+// src/screens/DashboardScreen/styles.ts
+
 import styled from 'styled-components'
 
 import { Screen } from '@/utils/styles/globals'
