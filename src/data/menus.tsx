@@ -40,6 +40,7 @@ import NotificationsManagementView from '@/screens/DashboardScreen/views/Notific
 import MyAccountView from '@/screens/DashboardScreen/views/MyAccount'
 
 import { SettingsProvider } from '@/contexts/SettingsProvider'
+import { UsersProvider } from '@/contexts/UsersProvider'
 
 // Interface do Menu
 export interface IMenu {
@@ -128,7 +129,11 @@ export const ADMIN_MENUS: IMenu[] = [
     menuName: 'Usuários',
     menuLegend: 'Gerenciar usuários da plataforma',
     menuIcon: <LuUsers />,
-    menuView: <UsersListView />,
+    menuView: (
+      <UsersProvider>
+        <UsersListView />
+      </UsersProvider>
+    ),
     menuCategory: 'Gerenciamento',
     menuDisabled: false,
     menuHidden: false

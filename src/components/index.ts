@@ -3,6 +3,7 @@ import UserMenu from './UserMenu'
 import ViewHeader from './ViewHeader'
 import FormModal from './ModalForm'
 import ConfirmModal from './ModalConfirm'
+import DetailsForm from './DetailsForm'
 import Table from './Table'
 
 export {
@@ -11,5 +12,6 @@ export {
   ViewHeader,
   FormModal,
   ConfirmModal,
+  DetailsForm,
   Table
 }
