@@ -1,24 +1,19 @@
 // src/components/DetailsForm.tsx
-
 import { useState } from 'react'
-
 import * as S from './styles'
-
 import { Descriptions, DescriptionsProps, message } from 'antd'
 import { CopyOutlined } from '@ant-design/icons'
 
-import { IUserProfile } from '@/types'
-
-export interface DetailsFormProps extends DescriptionsProps {
-  data: IUserProfile
+export interface DetailsFormProps<T> extends DescriptionsProps {
+  data: T // Tipo genérico para suportar qualquer estrutura de dados
   fields: {
-    key: keyof IUserProfile | string
+    key: keyof T | string // Chave deve ser compatível com o tipo T
     label: string
     render?: (value: any) => React.ReactNode
   }[]
 }
 
-const DetailsForm = ({ data, fields, ...rest }: DetailsFormProps) => {
+const DetailsForm = <T,>({ data, fields, ...rest }: DetailsFormProps<T>) => {
   const [hoveredKey, setHoveredKey] = useState<string | null>(null)
 
   const handleCopy = (value: any) => {
@@ -36,19 +31,19 @@ const DetailsForm = ({ data, fields, ...rest }: DetailsFormProps) => {
   return (
     <S.StyledDescriptions {...rest}>
       {fields.map(({ key, label, render }) => {
-        const value = data[key as keyof IUserProfile]
+        const value = data[key as keyof T]
         const displayValue = render ? render(value) : value || '-'
 
         return (
-          <Descriptions.Item key={key} label={label}>
+          <Descriptions.Item key={key as string} label={label}>
             <div
               onMouseEnter={() => value && setHoveredKey(key as string)}
               onMouseLeave={() => setHoveredKey(null)}
             >
               <S.DescriptionContent>
-                {typeof displayValue === 'object'
+                {typeof displayValue === 'object' && displayValue !== null
                   ? JSON.stringify(displayValue)
-                  : displayValue}
+                  : String(displayValue)}
                 {hoveredKey === key && value && (
                   <S.CopyButton
                     icon={<CopyOutlined />}

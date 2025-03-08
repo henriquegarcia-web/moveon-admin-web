@@ -1,5 +1,7 @@
 // src/types/index.ts
 
+// ============================================= ADMIN TYPES
+
 export interface IAdminProfile {
   id: string
   email: string
@@ -9,6 +11,8 @@ export interface IAdminProfile {
   firstAccessPending: boolean
   isBlocked?: boolean
 }
+
+// ============================================= USER TYPES
 
 export interface IUserProfile {
   id: string
@@ -87,4 +91,38 @@ export interface UserSettings {
     activityVisibility: 'public' | 'friends' | 'private'
   }
   blockedUsers: string[]
+}
+
+// ============================================= ADS TYPES
+
+export type AdStatus =
+  | 'pending'
+  | 'published'
+  | 'editing'
+  | 'rejected'
+  | 'sold'
+  | 'removed'
+
+export interface IAd {
+  id: string
+  userId: string
+  title: string
+  description: string
+  price: number
+  categoryId: string
+  condition: 'new' | 'semi_new' | 'used'
+  location: {
+    lat: number
+    lng: number
+    address: string
+  }
+  photos: string[]
+  video?: string
+  contactMethod: 'chat' | 'whatsapp' | 'phone'
+  status: AdStatus
+  createdAt: string
+  updatedAt?: string
+  approvedAt?: string
+  rejectedAt?: string
+  rejectionReason?: string
 }

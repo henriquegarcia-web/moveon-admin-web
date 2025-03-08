@@ -4,6 +4,7 @@ import { GetProp, MenuProps } from 'antd'
 
 import {
   LuChartColumnBig,
+  LuCheck,
   LuCircleUser,
   LuFileText,
   LuGrid2X2,
@@ -11,6 +12,7 @@ import {
   LuHouse,
   LuImage,
   LuKeyRound,
+  LuList,
   LuLogOut,
   LuMail,
   LuMegaphone,
@@ -41,6 +43,7 @@ import MyAccountView from '@/screens/DashboardScreen/views/MyAccount'
 
 import { SettingsProvider } from '@/contexts/SettingsProvider'
 import { UsersProvider } from '@/contexts/UsersProvider'
+import { AdsProvider } from '@/contexts/AdsProvider'
 
 // Interface do Menu
 export interface IMenu {
@@ -141,19 +144,27 @@ export const ADMIN_MENUS: IMenu[] = [
   {
     menuId: 'anuncios',
     menuName: 'Anúncios',
-    menuLegend: 'Listagem de todos os anúncios',
-    menuIcon: <LuGrid2X2 />,
-    menuView: <AdsListView />,
+    menuLegend: 'Gerenciar todos os anúncios',
+    menuIcon: <LuList />,
+    menuView: (
+      <AdsProvider>
+        <AdsListView />
+      </AdsProvider>
+    ),
     menuCategory: 'Gerenciamento',
     menuDisabled: false,
     menuHidden: false
   },
   {
-    menuId: 'anuncios-aprovacao',
+    menuId: 'aprovacao-anuncios',
     menuName: 'Aprovação de Anúncios',
-    menuLegend: 'Aprovar ou rejeitar anúncios pendentes',
-    menuIcon: <LuGrid2X2Check />,
-    menuView: <AdsApprovalView />,
+    menuLegend: 'Aprovar anúncios pendentes',
+    menuIcon: <LuCheck />,
+    menuView: (
+      <AdsProvider>
+        <AdsApprovalView />
+      </AdsProvider>
+    ),
     menuCategory: 'Gerenciamento',
     menuDisabled: false,
     menuHidden: false
