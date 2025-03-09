@@ -20,6 +20,7 @@ export const ViewHeader = styled.header`
   display: flex;
   align-items: center;
   justify-content: space-between;
+  column-gap: 10px;
   width: 100%;
   height: ${Globals.dashboard.view.headerHeight};
   padding: 0 ${Globals.dashboard.padding};

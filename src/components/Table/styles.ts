@@ -1,21 +1,14 @@
 // src/components/UserMenu/styles.ts
 
 import styled from 'styled-components'
-import { Table, theme } from 'antd'
+import { Result, Table, theme } from 'antd'
 
 import Fonts from '@/utils/styles/fonts'
+import Colors from '@/utils/styles/colors'
 
 const { useToken } = theme
 
-export const StyledTable = styled(Table)`
-  /* .ant-table-thead > tr > th {
-    font-size: ${Fonts.small};
-    font-weight: 500;
-  }
-  .ant-table-tbody > tr > td {
-    font-size: ${Fonts.xs};
-  } */
-
+export const StyledTable = styled(Table)<{ empty: number }>`
   .ant-table-thead {
     th.ant-table-cell {
       align-items: center;
@@ -62,4 +55,53 @@ export const StyledTable = styled(Table)`
 
     border: 1px solid ${() => useToken().token.colorBorderSecondary};
   }
+
+  ${({ empty }) =>
+    empty &&
+    `
+      height: 260px;
+      pointer-events: none;
+      
+      table {
+        border: none !important;
+      }
+
+      .ant-table-content {
+        position: relative;
+        border-radius: 8px;
+      }
+
+      tbody .ant-table-cell {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        border: none !important;
+      }
+    `}
 ` as typeof Table
+
+export const TableEmptyResult = styled(Result)`
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, 10px);
+
+  img {
+    width: 90px;
+    margin-bottom: -10px;
+  }
+
+  .ant-result-title {
+    font-size: ${Fonts.large};
+    line-height: ${Fonts.large};
+    font-weight: 500;
+  }
+
+  .ant-result-subtitle {
+    font-size: ${Fonts.xxs};
+    line-height: ${Fonts.xxs};
+    font-weight: 400;
+  }
+`

@@ -1,9 +1,14 @@
 // src/components/Table.tsx
 
-import { TableProps as AntTableProps, ConfigProvider } from 'antd'
+import {
+  TableProps as AntTableProps,
+  Button,
+  ConfigProvider,
+  Result
+} from 'antd'
 import * as S from './styles'
 
-import locale from 'antd/locale/pt_BR'
+import localeProvider from 'antd/locale/pt_BR'
 import dayjs from 'dayjs'
 dayjs.locale('pt-br')
 
@@ -32,6 +37,7 @@ export interface TableProps<T> extends Omit<AntTableProps<T>, 'columns'> {
         onChange?: (page: number, pageSize: number) => void
       }
   onRowClick?: (record: T) => void
+  empty?: number
 }
 
 const Table = <T extends object>({
@@ -43,9 +49,20 @@ const Table = <T extends object>({
   onRowClick,
   ...rest
 }: TableProps<T>) => {
+  let locale = {
+    emptyText: (
+      <S.TableEmptyResult
+        icon={<img src="/empty.png" alt="" />}
+        title="Sem dados"
+        subTitle="Não há informações para exibir no momento."
+      />
+    )
+  }
+
   return (
-    <ConfigProvider locale={locale}>
+    <ConfigProvider locale={localeProvider}>
       <S.StyledTable<T>
+        locale={locale}
         columns={columns as any}
         dataSource={dataSource}
         rowKey={rowKey as any}
@@ -56,6 +73,7 @@ const Table = <T extends object>({
           style: { cursor: onRowClick ? 'pointer' : 'default' }
         })}
         size="small"
+        empty={dataSource.length === 0 ? 1 : 0}
         {...rest}
       />
     </ConfigProvider>

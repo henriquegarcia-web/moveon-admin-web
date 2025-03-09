@@ -1,21 +1,41 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
-function useScrollbar(elementRef: React.RefObject<HTMLElement>) {
+function useScrollbar(
+  elementRef: React.RefObject<HTMLElement>,
+  isVisible: boolean = true
+) {
   const [containerHasScrollbar, setContainerHasScrollbar] = useState(false)
+
+  const checkScrollbar = useCallback(() => {
+    const element = elementRef.current
+    if (element) {
+      const hasScrollbar = element.scrollHeight > element.clientHeight
+      setContainerHasScrollbar(hasScrollbar)
+    }
+  }, [elementRef])
 
   useEffect(() => {
     const element = elementRef.current
 
-    const checkScrollbar = () => {
-      if (element) {
-        const hasScrollbar = element.scrollHeight > element.clientHeight
-        setContainerHasScrollbar(hasScrollbar)
+    const verifyScrollbar = () => {
+      if (isVisible && element) {
+        requestAnimationFrame(() => {
+          checkScrollbar()
+        })
       }
     }
 
-    checkScrollbar()
+    if (isVisible) {
+      verifyScrollbar()
+      const timer = setTimeout(verifyScrollbar, 100)
+      return () => clearTimeout(timer)
+    }
 
-    const resizeObserver = new ResizeObserver(checkScrollbar)
+    const resizeObserver = new ResizeObserver(() => {
+      if (isVisible) {
+        verifyScrollbar()
+      }
+    })
 
     if (element) {
       resizeObserver.observe(element)
@@ -26,9 +46,9 @@ function useScrollbar(elementRef: React.RefObject<HTMLElement>) {
         resizeObserver.unobserve(element)
       }
     }
-  }, [elementRef])
+  }, [elementRef, isVisible, checkScrollbar])
 
-  return [containerHasScrollbar]
+  return [containerHasScrollbar] as const
 }
 
 export default useScrollbar

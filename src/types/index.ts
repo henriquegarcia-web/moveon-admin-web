@@ -1,5 +1,7 @@
 // src/types/index.ts
 
+import { ADS_STATUS_TYPES, PRODUCT_CONDITION_TYPES } from '@/data/admin'
+
 // ============================================= ADMIN TYPES
 
 export interface IAdminProfile {
@@ -95,13 +97,9 @@ export interface UserSettings {
 
 // ============================================= ADS TYPES
 
-export type AdStatus =
-  | 'pending'
-  | 'published'
-  | 'editing'
-  | 'rejected'
-  | 'sold'
-  | 'removed'
+export type AdStatusType = (typeof ADS_STATUS_TYPES)[number]['key']
+
+export type ProductConditionType = (typeof PRODUCT_CONDITION_TYPES)[number]['key']
 
 export interface IAd {
   id: string
@@ -110,14 +108,14 @@ export interface IAd {
   description: string
   price: number
   categoryId: string
-  condition: 'new' | 'semi_new' | 'used'
+  condition: ProductConditionType
   location: {
     cep: string
     address: string
   }
   photos?: string[]
   video?: string
-  status: AdStatus
+  status: AdStatusType
   createdAt: string
   updatedAt?: string
   approvedAt?: string

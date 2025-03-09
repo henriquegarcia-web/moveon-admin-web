@@ -29,6 +29,7 @@ export const StyledModal = styled(Modal)`
 `
 
 export const StyledModalContent = styled.div<{ scrollbar: number }>`
+  height: fit-content;
   max-height: 500px;
   overflow: auto;
   padding-right: ${({ scrollbar }) => (scrollbar ? '10px' : '0')};

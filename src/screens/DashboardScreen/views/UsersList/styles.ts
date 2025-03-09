@@ -11,7 +11,6 @@ export const UsersListView = styled(View)`
 
 export const UsersListViewContent = styled(ViewContent)`
   display: flex;
-  padding: 24px;
 `
 
 export const SearchInput = styled(AntInput)`

@@ -11,7 +11,6 @@ export const AdsApprovalView = styled(View)`
 
 export const AdsApprovalViewContent = styled(ViewContent)`
   display: flex;
-  padding: 24px;
 `
 
 export const SearchInput = styled(AntInput)`

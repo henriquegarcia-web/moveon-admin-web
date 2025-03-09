@@ -28,9 +28,9 @@ const FormModal = <T extends object>({
   width = 520,
   ...rest
 }: FormModalProps<T>) => {
-  const formContainerRef = useRef(null)
+  const formContainerRef = useRef<HTMLDivElement>(null)
 
-  const [containerHasScrollbar] = useScrollbar(formContainerRef)
+  const [containerHasScrollbar] = useScrollbar(formContainerRef, visible)
 
   return (
     <S.StyledModal

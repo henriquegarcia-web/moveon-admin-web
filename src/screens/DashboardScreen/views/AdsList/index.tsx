@@ -1,34 +1,60 @@
 // src/screens/DashboardScreen/views/AdsListView/index.tsx
 import { useState, useEffect } from 'react'
 import * as S from './styles'
-import { LuTrash, LuSquarePen, LuEye, LuPlus } from 'react-icons/lu'
-import {
-  Button,
-  Tag,
-  Form,
-  Select,
-  Input,
-  Upload,
-  message,
-  List,
-  Space,
-  Image
-} from 'antd'
+import { LuTrash, LuSquarePen, LuEye } from 'react-icons/lu'
+import { Button, Tag, Form, Select, Input, message } from 'antd'
 import { Controller, useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { ViewHeader, FormModal, ConfirmModal, DetailsForm } from '@/components'
 import Table, { TableColumn } from '@/components/Table'
-import { IAd, AdStatus } from '@/types'
+import { AdStatusType, IAd, ProductConditionType } from '@/types'
 import { useAds } from '@/contexts/AdsProvider'
-import {
-  beforeUploadImage,
-  beforeUploadVideo,
-  uploadFileToFirebase
-} from '@/utils/functions/uploadUtils'
 import axios from 'axios'
+import {
+  SPORT_CATEGORIES_V1,
+  Category,
+  ADS_STATUS_TYPES,
+  AdStatus,
+  PRODUCT_CONDITION_TYPES,
+  ProductCondition
+} from '@/data/admin'
 
-// Schema de validação ajustado
+// Funções auxiliares para conversão de dados
+const convertCategoriesToOptions = (categories: Category[]) => {
+  const options: { value: string; label: string; disabled?: boolean }[] = []
+  categories.forEach((category) => {
+    // Categoria principal como guia (não selecionável)
+    options.push({
+      value: category.id,
+      label: category.name,
+      disabled: true
+    })
+    // Subcategorias como opções selecionáveis
+    category.subcategories.forEach((subcategory) => {
+      options.push({
+        value: subcategory.id,
+        label: `  ${subcategory.name}`, // Espaço para indentação visual
+        disabled: false
+      })
+    })
+  })
+  return options
+}
+
+const convertStatusToOptions = (statuses: AdStatus[]) =>
+  statuses.map((status) => ({
+    value: status.key,
+    label: status.label
+  }))
+
+const convertConditionsToOptions = (conditions: ProductCondition[]) =>
+  conditions.map((condition) => ({
+    value: condition.key,
+    label: condition.label
+  }))
+
+// Schema de validação ajustado de forma escalável
 const adSchema = yup
   .object({
     title: yup
@@ -44,10 +70,13 @@ const adSchema = yup
       .required('O preço é obrigatório')
       .min(1, 'O preço deve ser maior que 0')
       .typeError('Digite um valor numérico válido'),
-    categoryId: yup.string().required('Selecione uma categoria'),
+    categoryId: yup.string().required('Selecione uma subcategoria'),
     condition: yup
       .string()
-      .oneOf(['new', 'semi_new', 'used'], 'Selecione uma condição válida')
+      .oneOf(
+        PRODUCT_CONDITION_TYPES.map((c) => c.key),
+        'Selecione uma condição válida'
+      )
       .required('Selecione a condição do item'),
     location: yup.object().shape({
       cep: yup
@@ -58,14 +87,17 @@ const adSchema = yup
     }),
     // photos: yup
     //   .array()
-    //   .of(yup.mixed<File>().required('Cada item deve ser um arquivo')),
+    //   .of(yup.mixed<File>().required('Cada item deve ser um arquivo'))
     //   .min(1, 'Adicione pelo menos uma foto')
     //   .max(5, 'Máximo de 5 fotos permitido')
     //   .required('Adicione pelo menos uma foto'),
     // video: yup.mixed<File>().optional(),
     status: yup
       .string()
-      .oneOf(['pending', 'published', 'editing', 'rejected', 'sold', 'removed'])
+      .oneOf(
+        ADS_STATUS_TYPES.map((s) => s.key),
+        'Selecione um status válido'
+      )
       .required('Status é obrigatório')
   })
   .required()
@@ -75,20 +107,20 @@ type AdFormData = {
   description: string
   price: number
   categoryId: string
-  condition: 'new' | 'semi_new' | 'used'
+  condition: ProductConditionType
   location: {
     cep: string
     address: string
   }
   // photos: File[]
   // video?: File
-  status: AdStatus
+  status: AdStatusType
 }
 
 const AdsListView = () => {
   const { ads, loading, createAd, updateAd, deleteAd } = useAds()
   const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<AdStatus | 'all'>('all')
+  const [statusFilter, setStatusFilter] = useState<AdStatusType | 'all'>('all')
   const [isCreateModalVisible, setCreateModalVisible] = useState(false)
   const [isEditModalVisible, setEditModalVisible] = useState(false)
   const [isDeleteModalVisible, setDeleteModalVisible] = useState(false)
@@ -114,7 +146,7 @@ const AdsListView = () => {
       location: { cep: '', address: '' },
       // photos: [],
       // video: undefined,
-      status: 'pending'
+      status: 'draft'
     }
   })
 
@@ -168,19 +200,14 @@ const AdsListView = () => {
     {
       title: 'Status',
       key: 'status',
-      render: (_, record) => (
-        <Tag
-          color={
-            record.status === 'published'
-              ? 'green'
-              : record.status === 'pending'
-              ? 'orange'
-              : 'red'
-          }
-        >
-          {record.status}
-        </Tag>
-      )
+      render: (_, record) => {
+        const status = ADS_STATUS_TYPES.find((s) => s.key === record.status)
+        return (
+          <Tag color={status?.color || 'gray'}>
+            {status?.label || record.status}
+          </Tag>
+        )
+      }
     },
     {
       title: 'Ações',
@@ -202,7 +229,10 @@ const AdsListView = () => {
             onClick={() => {
               setSelectedAd(record)
               setEditModalVisible(true)
-              reset(record)
+              reset({
+                ...record,
+                price: record.price ?? undefined // Garantir que price seja number | undefined
+              })
             }}
             size="small"
           />
@@ -314,12 +344,6 @@ const AdsListView = () => {
         //     `ads/videos/${Date.now()}_${data.video.name}`
         //   )
         // }
-        // if (data.video && typeof data.video !== 'string') {
-        //   videoUrl = await uploadFileToFirebase(
-        //     data.video,
-        //     `ads/videos/${Date.now()}_${data.video.name}`
-        //   )
-        // }
 
         await updateAd(selectedAd.id, {
           ...data
@@ -369,7 +393,7 @@ const AdsListView = () => {
     {
       key: 'photos',
       label: 'Fotos',
-      render: (value: string[]) => value.join(', ')
+      render: (value: string[] | undefined) => value?.join(', ') || 'Nenhuma'
     },
     { key: 'video', label: 'Vídeo' },
     { key: 'status', label: 'Status' },
@@ -384,20 +408,15 @@ const AdsListView = () => {
           placeholder="Pesquisar por título ou descrição"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ width: 260, marginRight: 16 }}
+          style={{ width: 260 }}
         />
         <Select
           value={statusFilter}
           onChange={setStatusFilter}
-          style={{ width: 150, marginRight: 16 }}
+          style={{ width: 150, marginRight: 'auto' }}
           options={[
             { value: 'all', label: 'Todos' },
-            { value: 'pending', label: 'Pendente' },
-            { value: 'published', label: 'Publicado' },
-            { value: 'editing', label: 'Editando' },
-            { value: 'rejected', label: 'Rejeitado' },
-            { value: 'sold', label: 'Vendido' },
-            { value: 'removed', label: 'Removido' }
+            ...convertStatusToOptions(ADS_STATUS_TYPES)
           ]}
         />
         <Button type="primary" onClick={() => setCreateModalVisible(true)}>
@@ -567,9 +586,11 @@ const AdsListView = () => {
                 <Input
                   type="number"
                   {...field}
-                  value={field.value || ''}
+                  value={field.value === undefined ? '' : field.value}
                   onChange={(e) =>
-                    field.onChange(parseFloat(e.target.value) || 0)
+                    field.onChange(
+                      e.target.value ? parseFloat(e.target.value) : undefined
+                    )
                   }
                   placeholder="Ex.: 500.00"
                 />
@@ -587,12 +608,8 @@ const AdsListView = () => {
               >
                 <Select
                   {...field}
-                  placeholder="Selecione uma categoria"
-                  options={[
-                    { value: '', label: 'Selecione uma categoria' },
-                    { value: '1', label: 'Bicicletas' },
-                    { value: '2', label: 'Eletrônicos' }
-                  ]}
+                  placeholder="Selecione uma subcategoria"
+                  options={convertCategoriesToOptions(SPORT_CATEGORIES_V1)}
                 />
               </Form.Item>
             )}
@@ -609,12 +626,7 @@ const AdsListView = () => {
                 <Select
                   {...field}
                   placeholder="Selecione a condição"
-                  options={[
-                    { value: '', label: 'Selecione a condição' },
-                    { value: 'new', label: 'Novo' },
-                    { value: 'semi_new', label: 'Seminovo' },
-                    { value: 'used', label: 'Usado' }
-                  ]}
+                  options={convertConditionsToOptions(PRODUCT_CONDITION_TYPES)}
                 />
               </Form.Item>
             )}
@@ -660,14 +672,8 @@ const AdsListView = () => {
               >
                 <Select
                   {...field}
-                  options={[
-                    { value: 'pending', label: 'Pendente' },
-                    { value: 'published', label: 'Publicado' },
-                    { value: 'editing', label: 'Editando' },
-                    { value: 'rejected', label: 'Rejeitado' },
-                    { value: 'sold', label: 'Vendido' },
-                    { value: 'removed', label: 'Removido' }
-                  ]}
+                  placeholder="Selecione o status"
+                  options={convertStatusToOptions(ADS_STATUS_TYPES)}
                 />
               </Form.Item>
             )}
@@ -736,8 +742,12 @@ const AdsListView = () => {
                 <Input
                   type="number"
                   {...field}
-                  value={field.value || ''}
-                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                  value={field.value === undefined ? '' : field.value}
+                  onChange={(e) =>
+                    field.onChange(
+                      e.target.value ? parseFloat(e.target.value) : undefined
+                    )
+                  }
                 />
               </Form.Item>
             )}
@@ -751,7 +761,11 @@ const AdsListView = () => {
                 validateStatus={errors.categoryId ? 'error' : ''}
                 help={errors.categoryId?.message}
               >
-                <Input {...field} />
+                <Select
+                  {...field}
+                  placeholder="Selecione uma subcategoria"
+                  options={convertCategoriesToOptions(SPORT_CATEGORIES_V1)}
+                />
               </Form.Item>
             )}
           />
@@ -766,11 +780,7 @@ const AdsListView = () => {
               >
                 <Select
                   {...field}
-                  options={[
-                    { value: 'new', label: 'Novo' },
-                    { value: 'semi_new', label: 'Seminovo' },
-                    { value: 'used', label: 'Usado' }
-                  ]}
+                  options={convertConditionsToOptions(PRODUCT_CONDITION_TYPES)}
                 />
               </Form.Item>
             )}
@@ -799,14 +809,7 @@ const AdsListView = () => {
               >
                 <Select
                   {...field}
-                  options={[
-                    { value: 'pending', label: 'Pendente' },
-                    { value: 'published', label: 'Publicado' },
-                    { value: 'editing', label: 'Editando' },
-                    { value: 'rejected', label: 'Rejeitado' },
-                    { value: 'sold', label: 'Vendido' },
-                    { value: 'removed', label: 'Removido' }
-                  ]}
+                  options={convertStatusToOptions(ADS_STATUS_TYPES)}
                 />
               </Form.Item>
             )}
