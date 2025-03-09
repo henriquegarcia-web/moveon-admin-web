@@ -285,6 +285,37 @@ const AdsListView = () => {
     }
   }
 
+  // Função para comparar os valores do formulário com os dados originais
+  const formValues = watch()
+  const hasChanges = () => {
+    if (!selectedAd) return false
+    const originalData: AdFormData = {
+      title: selectedAd.title,
+      description: selectedAd.description,
+      price: selectedAd.price ?? 0,
+      categoryId: selectedAd.categoryId,
+      condition: selectedAd.condition,
+      location: {
+        cep: selectedAd.location.cep,
+        address: selectedAd.location.address
+      },
+      phone: selectedAd.phone,
+      status: selectedAd.status
+    }
+
+    return (
+      formValues.title !== originalData.title ||
+      formValues.description !== originalData.description ||
+      formValues.price !== originalData.price ||
+      formValues.categoryId !== originalData.categoryId ||
+      formValues.condition !== originalData.condition ||
+      formValues.location.cep !== formatCep(originalData.location.cep) ||
+      formValues.location.address !== originalData.location.address ||
+      formValues.phone !== originalData.phone ||
+      formValues.status !== originalData.status
+    )
+  }
+
   // Campos para o DetailsForm com tags para categoria e condição
   const adDetailsFields = [
     { key: 'title', label: 'Título' },
@@ -562,7 +593,7 @@ const AdsListView = () => {
       <FormModal<AdFormData>
         visible={isEditModalVisible}
         onClose={() => setEditModalVisible(false)}
-        title="Editar Anúncio"
+        title={`Editar Anúncio: #${selectedAd?.id}`}
         formMethods={
           { control, handleSubmit, formState: { errors, isSubmitting } } as any
         }
@@ -650,6 +681,28 @@ const AdsListView = () => {
             )}
           />
           <Controller
+            name="location.cep"
+            control={control}
+            render={({ field }) => (
+              <Form.Item
+                label="CEP"
+                validateStatus={errors.location?.cep ? 'error' : ''}
+                help={errors.location?.cep?.message}
+              >
+                <Input
+                  {...field}
+                  placeholder="Ex.: 12345-678"
+                  maxLength={9}
+                  value={formatCep(field.value)}
+                  onChange={(e) =>
+                    field.onChange(e.target.value.replace(/\D/g, ''))
+                  }
+                  inputMode="numeric"
+                />
+              </Form.Item>
+            )}
+          />
+          <Controller
             name="location.address"
             control={control}
             render={({ field }) => (
@@ -703,7 +756,7 @@ const AdsListView = () => {
             <Button
               type="primary"
               htmlType="submit"
-              disabled={!isValid}
+              disabled={!isValid || !hasChanges()} // Ajustado para usar hasChanges()
               loading={isSubmitting}
             >
               Salvar
