@@ -740,3 +740,67 @@ export const PRODUCT_CONDITION_TYPES: ProductCondition[] = [
     value: 0.9
   }
 ]
+
+// ======================================================== STATUS DO BANNER
+
+export interface BannerStatus {
+  key: 'active' | 'inactive' | 'scheduled'
+  label: string
+  description: string
+  color?: string
+}
+
+export const BANNER_STATUS_TYPES: BannerStatus[] = [
+  {
+    key: 'active',
+    label: 'Ativo',
+    description:
+      'O banner está atualmente visível para os usuários na plataforma.',
+    color: 'green'
+  },
+  {
+    key: 'inactive',
+    label: 'Inativo',
+    description: 'O banner não está visível para os usuários e foi desativado.',
+    color: 'gray'
+  },
+  {
+    key: 'scheduled',
+    label: 'Agendado',
+    description:
+      'O banner está programado para ser exibido em uma data futura.',
+    color: 'blue'
+  }
+]
+
+// ======================================================== POSIÇÃO DO BANNER
+
+export interface BannerPosition {
+  key: 'home-top' | 'home-middle' | 'search-side' | 'other'
+  label: string
+  description: string
+}
+
+export const BANNER_POSITION_TYPES: BannerPosition[] = [
+  {
+    key: 'home-top',
+    label: 'Home - Topo',
+    description: 'Banner exibido no topo da página inicial.'
+  },
+  {
+    key: 'home-middle',
+    label: 'Home - Meio',
+    description: 'Banner exibido no meio da página inicial.'
+  },
+  {
+    key: 'search-side',
+    label: 'Pesquisa - Lateral',
+    description: 'Banner exibido na lateral da página de pesquisa.'
+  },
+  {
+    key: 'other',
+    label: 'Outro',
+    description:
+      'Banner exibido em uma posição personalizada ou não especificada.'
+  }
+]

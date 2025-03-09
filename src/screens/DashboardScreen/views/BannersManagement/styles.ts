@@ -12,11 +12,13 @@ export const BannersManagementView = styled(View)`
 export const BannersManagementViewContent = styled(ViewContent)`
   display: flex;
   flex-direction: column;
+
+  td.ant-table-cell {
+    height: 70px !important;
+  }
 `
 
-export const SearchInput = styled(Input)`
-  margin-right: 16px;
-`
+export const SearchInput = styled(Input)``
 
 export const ActionButtons = styled.div`
   display: flex;
@@ -24,10 +26,11 @@ export const ActionButtons = styled.div`
 `
 
 export const ImageThumbnail = styled.img`
-  width: 50px;
+  width: 175px;
   height: 50px;
   object-fit: cover;
   border-radius: 4px;
+  margin-bottom: -3px;
 `
 
 export const ImagePreview = styled.img`

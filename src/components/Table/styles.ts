@@ -9,10 +9,17 @@ import Colors from '@/utils/styles/colors'
 const { useToken } = theme
 
 export const StyledTable = styled(Table)<{ empty: number }>`
+  width: 100%;
+  max-width: 100%;
+  table-layout: fixed;
+
   .ant-table-thead {
     th.ant-table-cell {
       align-items: center;
       height: 42px !important;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
 
       &:not(&:first-of-type) {
         padding-top: 2px !important;
@@ -21,17 +28,13 @@ export const StyledTable = styled(Table)<{ empty: number }>`
   }
 
   .ant-table-cell {
-    &:nth-of-type(1),
-    &:nth-of-type(2),
-    &:nth-of-type(3) {
-      white-space: nowrap;
-    }
-
     padding: 0 16px !important;
-
     font-size: ${Fonts.xxxs};
     line-height: ${Fonts.xxxs};
     font-weight: 400;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 
     &:last-of-type {
       display: flex;
@@ -52,9 +55,38 @@ export const StyledTable = styled(Table)<{ empty: number }>`
 
   .ant-table-content table {
     border-radius: 8px;
-
     border: 1px solid ${() => useToken().token.colorBorderSecondary};
   }
+
+  ${({ columns }) =>
+    columns &&
+    `
+    .ant-table-thead th,
+    .ant-table-tbody td {
+      ${columns
+        .map(
+          (col, index) => `
+        &:nth-child(${index + 1}) {
+          width: ${
+            col.width
+              ? typeof col.width === 'number'
+                ? `${col.width}px`
+                : col.width
+              : 'auto'
+          };
+          min-width: 50px; 
+          max-width: ${
+            col.width
+              ? typeof col.width === 'number'
+                ? `${col.width}px`
+                : col.width
+              : '100%'
+          };
+        }
+      `
+        )
+        .join('')}
+    `}
 
   ${({ empty }) =>
     empty &&
@@ -80,7 +112,7 @@ export const StyledTable = styled(Table)<{ empty: number }>`
         border: none !important;
       }
     `}
-` as typeof Table
+` as unknown as typeof Table
 
 export const TableEmptyResult = styled(Result)`
   position: absolute;

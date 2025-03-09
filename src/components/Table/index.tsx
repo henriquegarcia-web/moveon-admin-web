@@ -7,9 +7,7 @@ import {
   Result
 } from 'antd'
 import * as S from './styles'
-
 import localeProvider from 'antd/locale/pt_BR'
-
 
 export interface TableColumn<T> {
   title: string

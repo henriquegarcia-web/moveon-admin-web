@@ -1,5 +1,3 @@
-// src/screens/DashboardScreen/views/BannersManagementView/index.tsx
-
 import { useState } from 'react'
 import * as S from './styles'
 import { LuTrash, LuSquarePen, LuEye, LuCopy } from 'react-icons/lu'
@@ -119,7 +117,7 @@ const BannersManagementView = () => {
       link: '',
       startDate: moment().toISOString(),
       endDate: null,
-      status: 'inactive',
+      status: 'active',
       priority: 1
     }
   })
@@ -138,25 +136,17 @@ const BannersManagementView = () => {
 
   // Colunas da tabela
   const columns: TableColumn<IBanner>[] = [
-    { title: 'ID', dataIndex: 'id', key: 'id', width: 100 },
-    {
-      title: 'Título',
-      dataIndex: 'title',
-      key: 'title',
-      sorter: (a, b) => a.title.localeCompare(b.title)
-    },
+    { title: 'ID', dataIndex: 'id', key: 'id', width: 140 },
+    { title: 'Título', dataIndex: 'title', key: 'title', width: '20%' },
     {
       title: 'Imagem Desktop',
       key: 'desktopImageUrl',
       render: (_, record) => (
         <S.ImageThumbnail src={record.desktopImageUrl} alt={record.title} />
-      )
+      ),
+      width: 220
     },
-    {
-      title: 'Posição',
-      dataIndex: 'position',
-      key: 'position'
-    },
+    { title: 'Posição', dataIndex: 'position', key: 'position', width: 120 },
     {
       title: 'Status',
       key: 'status',
@@ -176,7 +166,8 @@ const BannersManagementView = () => {
             ? 'Agendado'
             : 'Inativo'}
         </Tag>
-      )
+      ),
+      width: 100
     },
     {
       title: 'Ações',
@@ -239,7 +230,12 @@ const BannersManagementView = () => {
 
   // Submissão do formulário de criação
   const onCreateBannerSubmit = async (data: BannerFormData) => {
-    const formattedData = { ...data, endDate: data.endDate || undefined }
+    // Filtra o endDate se for null ou undefined
+    const formattedData = Object.fromEntries(
+      Object.entries({ ...data, endDate: data.endDate || undefined }).filter(
+        ([_, value]) => value !== undefined
+      )
+    ) as Omit<IBanner, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>
     await createBanner(formattedData)
     setCreateModalVisible(false)
     reset()
@@ -248,7 +244,12 @@ const BannersManagementView = () => {
   // Submissão do formulário de edição
   const onEditBannerSubmit = async (data: BannerFormData) => {
     if (selectedBanner) {
-      const formattedData = { ...data, endDate: data.endDate || undefined }
+      // Filtra o endDate se for null ou undefined
+      const formattedData = Object.fromEntries(
+        Object.entries({ ...data, endDate: data.endDate || undefined }).filter(
+          ([_, value]) => value !== undefined
+        )
+      ) as Partial<IBanner>
       await updateBanner(selectedBanner.id, formattedData)
       setEditModalVisible(false)
       reset()
