@@ -9,15 +9,20 @@ import {
 } from 'react'
 import { ref, onValue } from 'firebase/database'
 import { db } from '@/firebase/config'
-import { IBanner } from '@/types'
-import { useAuth } from './AuthProvider'
-import { App } from 'antd'
 import {
   createBanner as createBannerService,
   updateBanner as updateBannerService,
-  deleteBanner as deleteBannerService,
-  toggleBannerStatus as toggleBannerStatusService
+  deleteBanner as deleteBannerService
 } from '@/services/banners'
+import { App } from 'antd'
+import { IBanner } from '@/types'
+import { useAuth } from './AuthProvider'
+import {
+  BANNER_STATUS_TYPES,
+  BANNER_POSITION_TYPES,
+  BannerStatus,
+  BannerPosition
+} from '@/data/admin'
 
 interface BannersContextData {
   banners: IBanner[]
@@ -30,8 +35,13 @@ interface BannersContextData {
     bannerData: Partial<IBanner>
   ) => Promise<void>
   deleteBanner: (bannerId: string) => Promise<void>
-  toggleBannerStatus: (bannerId: string, currentStatus: string) => Promise<void>
+  toggleBannerStatus: (
+    bannerId: string,
+    currentStatus: IBanner['status']
+  ) => Promise<void>
   getPerformanceData: (bannerId: string) => { date: string; clicks: number }[]
+  getBannerStatusDetail: (status: string) => BannerStatus | null
+  getBannerPositionDetail: (position: string) => BannerPosition | null
 }
 
 const BannersContext = createContext<BannersContextData>(
@@ -41,10 +51,11 @@ const BannersContext = createContext<BannersContextData>(
 export const BannersProvider = ({ children }: { children: ReactNode }) => {
   const { message } = App.useApp()
   const { admin } = useAuth()
+
   const [banners, setBanners] = useState<IBanner[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Listagem de banners em tempo real
+  // Listagem de banners
   useEffect(() => {
     const bannersRef = ref(db, 'banners')
     const unsubscribe = onValue(bannersRef, (snapshot) => {
@@ -64,18 +75,28 @@ export const BannersProvider = ({ children }: { children: ReactNode }) => {
     return () => unsubscribe()
   }, [])
 
+  const getBannerStatusDetail = (status: string): BannerStatus | null => {
+    const statusObj = BANNER_STATUS_TYPES.find((s) => s.key === status)
+    return statusObj || null
+  }
+
+  const getBannerPositionDetail = (position: string): BannerPosition | null => {
+    const positionObj = BANNER_POSITION_TYPES.find((p) => p.key === position)
+    return positionObj || null
+  }
+
   const createBanner = async (
     bannerData: Omit<IBanner, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>
   ) => {
     try {
-      if (!admin?.id) throw new Error('Administrador não autenticado')
-      await createBannerService({
-        ...bannerData,
-        createdBy: admin.id
-      })
+      if (!admin?.id) {
+        message.error('Usuário administrador não autenticado.')
+        return
+      }
+      await createBannerService({ ...bannerData, createdBy: admin.id })
       message.success('Banner criado com sucesso!')
     } catch (error: any) {
-      message.error(error.message || 'Erro ao criar banner')
+      message.error(error.message || 'Erro ao criar banner.')
     }
   }
 
@@ -87,7 +108,7 @@ export const BannersProvider = ({ children }: { children: ReactNode }) => {
       await updateBannerService(bannerId, bannerData)
       message.success('Banner atualizado com sucesso!')
     } catch (error: any) {
-      message.error(error.message || 'Erro ao atualizar banner')
+      message.error(error.message || 'Erro ao atualizar banner.')
     }
   }
 
@@ -96,36 +117,35 @@ export const BannersProvider = ({ children }: { children: ReactNode }) => {
       await deleteBannerService(bannerId)
       message.success('Banner excluído com sucesso!')
     } catch (error: any) {
-      message.error(error.message || 'Erro ao excluir banner')
+      message.error(error.message || 'Erro ao excluir banner.')
     }
   }
 
   const toggleBannerStatus = async (
     bannerId: string,
-    currentStatus: string
+    currentStatus: IBanner['status']
   ) => {
     try {
-      await toggleBannerStatusService(
-        bannerId,
-        currentStatus === 'active' ? 'inactive' : 'active'
-      )
+      const newStatus = currentStatus === 'active' ? 'inactive' : 'active'
+      await updateBannerService(bannerId, { status: newStatus })
       message.success(
         `Banner ${
-          currentStatus === 'active' ? 'desativado' : 'ativado'
+          newStatus === 'active' ? 'ativado' : 'desativado'
         } com sucesso!`
       )
     } catch (error: any) {
-      message.error(error.message || 'Erro ao alterar status do banner')
+      message.error(error.message || 'Erro ao alterar status do banner.')
     }
   }
 
-  // Dados fictícios para o gráfico (substituir por integração real no futuro)
-  const getPerformanceData = (bannerId: string) => {
+  const getPerformanceData = (
+    bannerId: string
+  ): { date: string; clicks: number }[] => {
     return [
-      { date: '2025-03-01', clicks: 120 },
-      { date: '2025-03-02', clicks: 150 },
-      { date: '2025-03-03', clicks: 90 },
-      { date: '2025-03-04', clicks: 200 }
+      { date: '2023-10-01', clicks: 120 },
+      { date: '2023-10-02', clicks: 150 },
+      { date: '2023-10-03', clicks: 80 },
+      { date: '2023-10-04', clicks: 200 }
     ]
   }
 
@@ -136,7 +156,9 @@ export const BannersProvider = ({ children }: { children: ReactNode }) => {
     updateBanner,
     deleteBanner,
     toggleBannerStatus,
-    getPerformanceData
+    getPerformanceData,
+    getBannerStatusDetail,
+    getBannerPositionDetail
   }
 
   return (

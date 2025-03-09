@@ -1,3 +1,5 @@
+// src/screens/DashboardScreen/views/BannersManagementView/index.tsx
+
 import { useState } from 'react'
 import * as S from './styles'
 import { LuTrash, LuSquarePen, LuEye, LuCopy } from 'react-icons/lu'
@@ -20,6 +22,20 @@ import { IBanner } from '@/types'
 import moment from 'moment'
 import { useBanners } from '@/contexts/BannersProvider'
 import localeProvider from 'antd/locale/pt_BR'
+import { BANNER_POSITION_TYPES, BANNER_STATUS_TYPES } from '@/data/admin'
+
+// Funções auxiliares para conversão de dados
+const convertPositionsToOptions = () =>
+  BANNER_POSITION_TYPES.map((position) => ({
+    value: position.key,
+    label: position.label
+  }))
+
+const convertStatusToOptions = () =>
+  BANNER_STATUS_TYPES.map((status) => ({
+    value: status.key,
+    label: status.label
+  }))
 
 // Schema de validação para banners
 const bannerSchema = yup
@@ -35,9 +51,9 @@ const bannerSchema = yup
       .string()
       .required('A URL da imagem mobile é obrigatória'),
     position: yup
-      .mixed<'home-top' | 'home-middle' | 'search-side' | 'other'>()
+      .string()
       .oneOf(
-        ['home-top', 'home-middle', 'search-side', 'other'],
+        BANNER_POSITION_TYPES.map((p) => p.key),
         'Posição inválida'
       )
       .required('A posição é obrigatória'),
@@ -57,8 +73,11 @@ const bannerSchema = yup
         }
       ),
     status: yup
-      .mixed<'active' | 'inactive' | 'scheduled'>()
-      .oneOf(['active', 'inactive', 'scheduled'], 'Status inválido')
+      .string()
+      .oneOf(
+        BANNER_STATUS_TYPES.map((s) => s.key),
+        'Status inválido'
+      )
       .required('O status é obrigatório'),
     priority: yup
       .number()
@@ -88,7 +107,9 @@ const BannersManagementView = () => {
     updateBanner,
     deleteBanner,
     toggleBannerStatus,
-    getPerformanceData
+    getPerformanceData,
+    getBannerStatusDetail,
+    getBannerPositionDetail
   } = useBanners()
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -117,7 +138,7 @@ const BannersManagementView = () => {
       link: '',
       startDate: moment().toISOString(),
       endDate: null,
-      status: 'active',
+      status: 'inactive',
       priority: 1
     }
   })
@@ -136,38 +157,40 @@ const BannersManagementView = () => {
 
   // Colunas da tabela
   const columns: TableColumn<IBanner>[] = [
-    { title: 'ID', dataIndex: 'id', key: 'id', width: 140 },
-    { title: 'Título', dataIndex: 'title', key: 'title', width: '20%' },
+    { title: 'ID', dataIndex: 'id', key: 'id', width: 100 },
+    {
+      title: 'Título',
+      dataIndex: 'title',
+      key: 'title',
+      sorter: (a, b) => a.title.localeCompare(b.title)
+    },
     {
       title: 'Imagem Desktop',
       key: 'desktopImageUrl',
       render: (_, record) => (
         <S.ImageThumbnail src={record.desktopImageUrl} alt={record.title} />
       ),
-      width: 220
+      width: 150
     },
-    { title: 'Posição', dataIndex: 'position', key: 'position', width: 120 },
+    {
+      title: 'Posição',
+      dataIndex: 'position',
+      key: 'position',
+      render: (value) => (
+        <Tag>{getBannerPositionDetail(value)?.label || value}</Tag>
+      )
+    },
     {
       title: 'Status',
       key: 'status',
-      render: (_, record) => (
-        <Tag
-          color={
-            record.status === 'active'
-              ? 'green'
-              : record.status === 'scheduled'
-              ? 'blue'
-              : 'gray'
-          }
-        >
-          {record.status === 'active'
-            ? 'Ativo'
-            : record.status === 'scheduled'
-            ? 'Agendado'
-            : 'Inativo'}
-        </Tag>
-      ),
-      width: 100
+      render: (_, record) => {
+        const status = getBannerStatusDetail(record.status)
+        return (
+          <Tag color={status?.color || 'gray'}>
+            {status?.label || record.status}
+          </Tag>
+        )
+      }
     },
     {
       title: 'Ações',
@@ -283,27 +306,22 @@ const BannersManagementView = () => {
         <S.ImagePreview src={value} alt="Banner Mobile" />
       )
     },
-    { key: 'position', label: 'Posição' },
+    {
+      key: 'position',
+      label: 'Posição',
+      render: (value: string) => (
+        <Tag>{getBannerPositionDetail(value)?.label || value}</Tag>
+      )
+    },
     {
       key: 'status',
       label: 'Status',
-      render: (value: string) => (
-        <Tag
-          color={
-            value === 'active'
-              ? 'green'
-              : value === 'scheduled'
-              ? 'blue'
-              : 'gray'
-          }
-        >
-          {value === 'active'
-            ? 'Ativo'
-            : value === 'scheduled'
-            ? 'Agendado'
-            : 'Inativo'}
-        </Tag>
-      )
+      render: (value: string) => {
+        const status = getBannerStatusDetail(value)
+        return (
+          <Tag color={status?.color || 'gray'}>{status?.label || value}</Tag>
+        )
+      }
     },
     { key: 'link', label: 'Link', render: (value: string) => value || '-' },
     {
@@ -357,9 +375,7 @@ const BannersManagementView = () => {
           style={{ width: 150, marginRight: 'auto' }}
           options={[
             { value: 'all', label: 'Todos' },
-            { value: 'active', label: 'Ativo' },
-            { value: 'inactive', label: 'Inativo' },
-            { value: 'scheduled', label: 'Agendado' }
+            ...convertStatusToOptions()
           ]}
         />
         <Button type="primary" onClick={() => setCreateModalVisible(true)}>
@@ -461,15 +477,7 @@ const BannersManagementView = () => {
                 validateStatus={errors.position ? 'error' : ''}
                 help={errors.position?.message}
               >
-                <Select
-                  {...field}
-                  options={[
-                    { value: 'home-top', label: 'Home - Topo' },
-                    { value: 'home-middle', label: 'Home - Meio' },
-                    { value: 'search-side', label: 'Pesquisa - Lateral' },
-                    { value: 'other', label: 'Outro' }
-                  ]}
-                />
+                <Select {...field} options={convertPositionsToOptions()} />
               </Form.Item>
             )}
           />
@@ -537,14 +545,7 @@ const BannersManagementView = () => {
                 validateStatus={errors.status ? 'error' : ''}
                 help={errors.status?.message}
               >
-                <Select
-                  {...field}
-                  options={[
-                    { value: 'active', label: 'Ativo' },
-                    { value: 'inactive', label: 'Inativo' },
-                    { value: 'scheduled', label: 'Agendado' }
-                  ]}
-                />
+                <Select {...field} options={convertStatusToOptions()} />
               </Form.Item>
             )}
           />
@@ -662,15 +663,7 @@ const BannersManagementView = () => {
                 validateStatus={errors.position ? 'error' : ''}
                 help={errors.position?.message}
               >
-                <Select
-                  {...field}
-                  options={[
-                    { value: 'home-top', label: 'Home - Topo' },
-                    { value: 'home-middle', label: 'Home - Meio' },
-                    { value: 'search-side', label: 'Pesquisa - Lateral' },
-                    { value: 'other', label: 'Outro' }
-                  ]}
-                />
+                <Select {...field} options={convertPositionsToOptions()} />
               </Form.Item>
             )}
           />
@@ -736,14 +729,7 @@ const BannersManagementView = () => {
                 validateStatus={errors.status ? 'error' : ''}
                 help={errors.status?.message}
               >
-                <Select
-                  {...field}
-                  options={[
-                    { value: 'active', label: 'Ativo' },
-                    { value: 'inactive', label: 'Inativo' },
-                    { value: 'scheduled', label: 'Agendado' }
-                  ]}
-                />
+                <Select {...field} options={convertStatusToOptions()} />
               </Form.Item>
             )}
           />
