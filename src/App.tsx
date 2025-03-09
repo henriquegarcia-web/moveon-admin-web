@@ -3,6 +3,9 @@
 import AppRoutes from '@/Routes'
 import { ConfigProvider, theme } from 'antd'
 
+import dayjs from 'dayjs'
+dayjs.locale('pt-br')
+
 function App() {
   return <AppThemed />
 }

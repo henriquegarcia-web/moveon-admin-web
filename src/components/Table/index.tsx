@@ -9,8 +9,7 @@ import {
 import * as S from './styles'
 
 import localeProvider from 'antd/locale/pt_BR'
-import dayjs from 'dayjs'
-dayjs.locale('pt-br')
+
 
 export interface TableColumn<T> {
   title: string

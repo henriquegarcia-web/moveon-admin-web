@@ -44,6 +44,7 @@ import MyAccountView from '@/screens/DashboardScreen/views/MyAccount'
 import { SettingsProvider } from '@/contexts/SettingsProvider'
 import { UsersProvider } from '@/contexts/UsersProvider'
 import { AdsProvider } from '@/contexts/AdsProvider'
+import { BannersProvider } from '@/contexts/BannersProvider'
 
 // Interface do Menu
 export interface IMenu {
@@ -110,7 +111,11 @@ export const ADMIN_MENUS: IMenu[] = [
     menuName: 'Banners',
     menuLegend: 'Gerenciar banners promocionais na plataforma',
     menuIcon: <LuImage />,
-    menuView: <BannersManagementView />,
+    menuView: (
+      <BannersProvider>
+        <BannersManagementView />
+      </BannersProvider>
+    ),
     menuCategory: 'Layout',
     menuDisabled: false,
     menuHidden: false

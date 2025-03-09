@@ -124,3 +124,20 @@ export interface IAd {
   rejectedAt?: string
   rejectionReason?: string
 }
+
+// ============================================= BANNER TYPES
+
+export interface IBanner {
+  id: string
+  title: string
+  imageUrl: string
+  position: 'home-top' | 'home-middle' | 'search-side' | 'other'
+  link?: string
+  status: 'active' | 'inactive' | 'scheduled'
+  startDate: string
+  endDate?: string
+  priority: number
+  createdAt: string
+  updatedAt?: string
+  createdBy: string
+}
