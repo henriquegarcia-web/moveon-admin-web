@@ -8,7 +8,7 @@ import {
   ReactNode
 } from 'react'
 import { ref, onValue } from 'firebase/database'
-import { message } from 'antd'
+import { App } from 'antd'
 
 import { db } from '@/firebase/config'
 import { IUserProfile } from '@/types'
@@ -23,6 +23,8 @@ interface UsersContextData {
 const UsersContext = createContext<UsersContextData>({} as UsersContextData)
 
 export const UsersProvider = ({ children }: { children: ReactNode }) => {
+  const { message } = App.useApp()
+
   const [users, setUsers] = useState<IUserProfile[]>([])
   const [loading, setLoading] = useState(true)
 

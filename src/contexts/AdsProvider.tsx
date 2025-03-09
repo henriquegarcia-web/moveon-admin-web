@@ -1,5 +1,4 @@
 // src/contexts/AdsProvider.tsx
-
 import {
   createContext,
   useContext,
@@ -10,16 +9,20 @@ import {
 import { ref, onValue } from 'firebase/database'
 import { db } from '@/firebase/config'
 import {
-  createAd,
-  updateAd,
-  deleteAd,
-  approveAd,
-  rejectAd
+  createAd as createAdService,
+  updateAd as updateAdService,
+  deleteAd as deleteAdService,
+  approveAd as approveAdService,
+  rejectAd as rejectAdService
 } from '@/services/ads'
-import { message } from 'antd'
-
+import { App } from 'antd'
 import { IAd } from '@/types'
 import { useAuth } from './AuthProvider'
+import {
+  SPORT_CATEGORIES_V1,
+  ADS_STATUS_TYPES,
+  PRODUCT_CONDITION_TYPES
+} from '@/data/admin'
 
 interface AdsContextData {
   ads: IAd[]
@@ -31,11 +34,18 @@ interface AdsContextData {
   deleteAd: (adId: string) => Promise<void>
   approveAd: (adId: string) => Promise<void>
   rejectAd: (adId: string, reason: string) => Promise<void>
+  formatCep: (cep: string) => string
+  formatPhone: (phone: string) => string
+  formatPrice: (price: number) => string
+  getCategoryLabel: (categoryId: string) => string
+  getConditionLabel: (condition: string) => string
+  getStatusLabel: (status: string) => string
 }
 
 const AdsContext = createContext<AdsContextData>({} as AdsContextData)
 
 export const AdsProvider = ({ children }: { children: ReactNode }) => {
+  const { message } = App.useApp()
   const { admin } = useAuth()
 
   const [ads, setAds] = useState<IAd[]>([])
@@ -61,52 +71,123 @@ export const AdsProvider = ({ children }: { children: ReactNode }) => {
     return () => unsubscribe()
   }, [])
 
+  // Funções de formatação centralizadas
+  const formatCep = (cep: string): string => {
+    const cleaned = cep.replace(/\D/g, '')
+    if (cleaned.length <= 5) return cleaned
+    return `${cleaned.slice(0, 5)}-${cleaned.slice(5, 8)}`
+  }
+
+  const formatPhone = (value: string) => {
+    const cleaned = value.replace(/\D/g, '')
+    if (cleaned.length <= 2) return cleaned
+    if (cleaned.length <= 6)
+      return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2)}`
+    return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(
+      7,
+      11
+    )}`
+  }
+
+  const formatPrice = (value: number | undefined) => {
+    if (value === undefined || value === null) return ''
+    const cleaned = value.toString().replace(/\D/g, '')
+    const numberValue = parseFloat(cleaned) / 100
+    return numberValue.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })
+  }
+
+  const getCategoryLabel = (categoryId: string): string => {
+    for (const category of SPORT_CATEGORIES_V1) {
+      if (category.id === categoryId) return category.name
+      const subcategory = category.subcategories.find(
+        (sub) => sub.id === categoryId
+      )
+      if (subcategory) return subcategory.name
+    }
+    return categoryId
+  }
+
+  const getConditionLabel = (condition: string): string => {
+    const cond = PRODUCT_CONDITION_TYPES.find((c) => c.key === condition)
+    return cond ? cond.label : condition
+  }
+
+  const getStatusLabel = (status: string): string => {
+    const statusObj = ADS_STATUS_TYPES.find((s) => s.key === status)
+    return statusObj ? statusObj.label : status
+  }
+
   const createAdHandler = async (
     adData: Omit<IAd, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
   ) => {
     try {
-      if (!admin?.id) return
-
-      await createAd({ ...adData, userId: admin.id })
+      if (!admin?.id) {
+        message.error('Usuário administrador não autenticado.')
+        return
+      }
+      const cleanedData = {
+        ...adData,
+        location: {
+          ...adData.location,
+          cep: adData.location.cep.replace(/\D/g, '')
+        },
+        phone: adData.phone.replace(/\D/g, '')
+      }
+      await createAdService({ ...cleanedData, userId: admin.id })
       message.success('Anúncio criado com sucesso!')
     } catch (error: any) {
-      message.error('Erro ao criar anúncio.')
+      message.error(error.message || 'Erro ao criar anúncio.')
     }
   }
 
   const updateAdHandler = async (adId: string, adData: Partial<IAd>) => {
     try {
-      await updateAd(adId, adData)
+      const cleanedData = {
+        ...adData,
+        location: adData.location
+          ? {
+              ...adData.location,
+              cep: adData.location.cep?.replace(/\D/g, '')
+            }
+          : undefined,
+        phone: adData.phone?.replace(/\D/g, '')
+      }
+      await updateAdService(adId, cleanedData)
       message.success('Anúncio atualizado com sucesso!')
     } catch (error: any) {
-      message.error('Erro ao atualizar anúncio.')
+      message.error(error.message || 'Erro ao atualizar anúncio.')
     }
   }
 
   const deleteAdHandler = async (adId: string) => {
     try {
-      await deleteAd(adId)
+      await deleteAdService(adId)
       message.success('Anúncio excluído com sucesso!')
     } catch (error: any) {
-      message.error('Erro ao excluir anúncio.')
+      message.error(error.message || 'Erro ao excluir anúncio.')
     }
   }
 
   const approveAdHandler = async (adId: string) => {
     try {
-      await approveAd(adId)
+      await approveAdService(adId)
       message.success('Anúncio aprovado com sucesso!')
     } catch (error: any) {
-      message.error('Erro ao aprovar anúncio.')
+      message.error(error.message || 'Erro ao aprovar anúncio.')
     }
   }
 
   const rejectAdHandler = async (adId: string, reason: string) => {
     try {
-      await rejectAd(adId, reason)
+      await rejectAdService(adId, reason)
       message.success('Anúncio rejeitado com sucesso!')
     } catch (error: any) {
-      message.error('Erro ao rejeitar anúncio.')
+      message.error(error.message || 'Erro ao rejeitar anúncio.')
     }
   }
 
@@ -117,7 +198,13 @@ export const AdsProvider = ({ children }: { children: ReactNode }) => {
     updateAd: updateAdHandler,
     deleteAd: deleteAdHandler,
     approveAd: approveAdHandler,
-    rejectAd: rejectAdHandler
+    rejectAd: rejectAdHandler,
+    formatCep,
+    formatPhone,
+    formatPrice,
+    getCategoryLabel,
+    getConditionLabel,
+    getStatusLabel
   }
 
   return (

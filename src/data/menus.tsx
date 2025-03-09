@@ -4,7 +4,7 @@ import { GetProp, MenuProps } from 'antd'
 
 import {
   LuChartColumnBig,
-  LuCheck,
+  LuCircleCheckBig,
   LuCircleUser,
   LuFileText,
   LuGrid2X2,
@@ -159,7 +159,7 @@ export const ADMIN_MENUS: IMenu[] = [
     menuId: 'aprovacao-anuncios',
     menuName: 'Aprovação de Anúncios',
     menuLegend: 'Aprovar anúncios pendentes',
-    menuIcon: <LuCheck />,
+    menuIcon: <LuCircleCheckBig />,
     menuView: (
       <AdsProvider>
         <AdsApprovalView />
@@ -176,7 +176,7 @@ export const ADMIN_MENUS: IMenu[] = [
     menuIcon: <LuMessageSquare />,
     menuView: <ChatsManagementView />,
     menuCategory: 'Gerenciamento',
-    menuDisabled: false,
+    menuDisabled: true,
     menuHidden: false
   },
   {
@@ -186,7 +186,7 @@ export const ADMIN_MENUS: IMenu[] = [
     menuIcon: <LuTrophy />,
     menuView: <TournamentsManagementView />,
     menuCategory: 'Gerenciamento',
-    menuDisabled: false,
+    menuDisabled: true,
     menuHidden: false
   },
   {
@@ -197,7 +197,7 @@ export const ADMIN_MENUS: IMenu[] = [
     menuView: <NotificationsManagementView />,
 
     menuCategory: 'Gerenciamento',
-    menuDisabled: false,
+    menuDisabled: true,
     menuHidden: false
   },
 
@@ -224,7 +224,7 @@ export const ADMIN_MENUS: IMenu[] = [
     menuView: <SecuritySettingsView />,
 
     menuCategory: 'Configurações',
-    menuDisabled: false,
+    menuDisabled: true,
     menuHidden: false
   },
   {

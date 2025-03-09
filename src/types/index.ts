@@ -99,7 +99,8 @@ export interface UserSettings {
 
 export type AdStatusType = (typeof ADS_STATUS_TYPES)[number]['key']
 
-export type ProductConditionType = (typeof PRODUCT_CONDITION_TYPES)[number]['key']
+export type ProductConditionType =
+  (typeof PRODUCT_CONDITION_TYPES)[number]['key']
 
 export interface IAd {
   id: string
@@ -111,11 +112,12 @@ export interface IAd {
   condition: ProductConditionType
   location: {
     cep: string
-    address: string
+    address?: string
   }
   photos?: string[]
   video?: string
   status: AdStatusType
+  phone: string
   createdAt: string
   updatedAt?: string
   approvedAt?: string

@@ -46,4 +46,21 @@ const timestampToCreationDay = (timestamp: string): string => {
   return `${day} de ${month} de ${year}`
 }
 
-export { timestampToCreationDay, timestampToDate, timestampToHours }
+const formatDateTime = (isoDate: string): string => {
+  const date = new Date(isoDate)
+
+  const day = String(date.getUTCDate()).padStart(2, '0')
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+  const year = date.getUTCFullYear()
+  const hours = String(date.getUTCHours()).padStart(2, '0')
+  const minutes = String(date.getUTCMinutes()).padStart(2, '0')
+
+  return `${day}/${month}/${year} às ${hours}:${minutes}`
+}
+
+export {
+  timestampToCreationDay,
+  timestampToDate,
+  timestampToHours,
+  formatDateTime
+}

@@ -11,7 +11,7 @@ import { ref, onValue, remove } from 'firebase/database'
 import { db } from '@/firebase/config'
 import { IAdminProfile } from '@/types'
 import { createAdminAccess, blockAdminAccess } from '@/services/auth'
-import { message } from 'antd'
+import { App } from 'antd'
 import { useAuth } from '@/contexts/AuthProvider'
 
 interface SettingsContextData {
@@ -27,7 +27,9 @@ const SettingsContext = createContext<SettingsContextData>(
 )
 
 export const SettingsProvider = ({ children }: { children: ReactNode }) => {
+  const { message } = App.useApp()
   const { admin: currentAdmin } = useAuth()
+
   const [admins, setAdmins] = useState<IAdminProfile[]>([])
   const [loading, setLoading] = useState(true)
 

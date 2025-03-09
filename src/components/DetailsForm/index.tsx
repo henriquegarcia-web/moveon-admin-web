@@ -1,8 +1,8 @@
-// src/components/DetailsForm.tsx
 import { useState } from 'react'
 import * as S from './styles'
 import { Descriptions, DescriptionsProps, message } from 'antd'
 import { CopyOutlined } from '@ant-design/icons'
+import React from 'react'
 
 export interface DetailsFormProps<T> extends DescriptionsProps {
   data: T // Tipo genérico para suportar qualquer estrutura de dados
@@ -41,19 +41,23 @@ const DetailsForm = <T,>({ data, fields, ...rest }: DetailsFormProps<T>) => {
               onMouseLeave={() => setHoveredKey(null)}
             >
               <S.DescriptionContent>
-                {typeof displayValue === 'object' && displayValue !== null
-                  ? JSON.stringify(displayValue)
-                  : String(displayValue)}
-                {hoveredKey === key && value && (
-                  <S.CopyButton
-                    icon={<CopyOutlined />}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleCopy(value)
-                    }}
-                    size="small"
-                  />
-                )}
+                {/* Verifica se displayValue é um elemento React */}
+                {React.isValidElement(displayValue)
+                  ? displayValue
+                  : /* Para valores simples, converte para string */
+                    String(displayValue)}
+                {hoveredKey === key &&
+                  value &&
+                  !React.isValidElement(displayValue) && (
+                    <S.CopyButton
+                      icon={<CopyOutlined />}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleCopy(value)
+                      }}
+                      size="small"
+                    />
+                  )}
               </S.DescriptionContent>
             </div>
           </Descriptions.Item>

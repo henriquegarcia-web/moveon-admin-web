@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import * as S from './styles'
 import { LuTrash, LuSquarePen, LuEye } from 'react-icons/lu'
-import { Button, Tag, Form, Select, Input, message } from 'antd'
+import { Button, Tag, Form, Select, Input } from 'antd'
 import { Controller, useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
@@ -19,22 +19,21 @@ import {
   PRODUCT_CONDITION_TYPES,
   ProductCondition
 } from '@/data/admin'
+import { formatDateTime } from '@/utils/functions/convertTimestamp'
 
 // Funções auxiliares para conversão de dados
 const convertCategoriesToOptions = (categories: Category[]) => {
   const options: { value: string; label: string; disabled?: boolean }[] = []
   categories.forEach((category) => {
-    // Categoria principal como guia (não selecionável)
     options.push({
       value: category.id,
       label: category.name,
       disabled: true
     })
-    // Subcategorias como opções selecionáveis
     category.subcategories.forEach((subcategory) => {
       options.push({
         value: subcategory.id,
-        label: `  ${subcategory.name}`, // Espaço para indentação visual
+        label: `  ${subcategory.name}`,
         disabled: false
       })
     })
@@ -83,15 +82,12 @@ const adSchema = yup
         .string()
         .required('O CEP é obrigatório')
         .matches(/^\d{5}-?\d{3}$/, 'CEP inválido'),
-      address: yup.string().required('O endereço é obrigatório')
+      address: yup.string()
     }),
-    // photos: yup
-    //   .array()
-    //   .of(yup.mixed<File>().required('Cada item deve ser um arquivo'))
-    //   .min(1, 'Adicione pelo menos uma foto')
-    //   .max(5, 'Máximo de 5 fotos permitido')
-    //   .required('Adicione pelo menos uma foto'),
-    // video: yup.mixed<File>().optional(),
+    phone: yup
+      .string()
+      .required('O telefone é obrigatório')
+      .matches(/^\d{11}$/, 'O telefone deve ter 11 dígitos (DDD + número)'),
     status: yup
       .string()
       .oneOf(
@@ -110,15 +106,26 @@ type AdFormData = {
   condition: ProductConditionType
   location: {
     cep: string
-    address: string
+    address?: string
   }
-  // photos: File[]
-  // video?: File
+  phone: string
   status: AdStatusType
 }
 
 const AdsListView = () => {
-  const { ads, loading, createAd, updateAd, deleteAd } = useAds()
+  const {
+    ads,
+    loading,
+    createAd,
+    updateAd,
+    deleteAd,
+    formatCep,
+    formatPhone,
+    formatPrice,
+    getCategoryLabel,
+    getConditionLabel,
+    getStatusLabel
+  } = useAds()
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<AdStatusType | 'all'>('all')
   const [isCreateModalVisible, setCreateModalVisible] = useState(false)
@@ -136,16 +143,17 @@ const AdsListView = () => {
     setValue,
     watch
   } = useForm<AdFormData>({
+    mode: 'onChange',
+    reValidateMode: 'onChange',
     resolver: yupResolver(adSchema),
     defaultValues: {
       title: '',
       description: '',
-      price: undefined,
+      price: 0,
       categoryId: '',
       condition: 'new',
       location: { cep: '', address: '' },
-      // photos: [],
-      // video: undefined,
+      phone: '',
       status: 'draft'
     }
   })
@@ -164,11 +172,9 @@ const AdsListView = () => {
               'location.address',
               `${response.data.logradouro}, ${response.data.bairro}, ${response.data.localidade} - ${response.data.uf}`
             )
-          } else {
-            message.error('CEP inválido.')
           }
         } catch (error) {
-          message.error('Erro ao buscar o CEP.')
+          // Erro tratado no contexto
         }
       }
     }
@@ -195,7 +201,7 @@ const AdsListView = () => {
       title: 'Preço',
       dataIndex: 'price',
       key: 'price',
-      render: (value) => `R$ ${value.toFixed(2)}`
+      render: (value) => formatPrice(value)
     },
     {
       title: 'Status',
@@ -231,7 +237,12 @@ const AdsListView = () => {
               setEditModalVisible(true)
               reset({
                 ...record,
-                price: record.price ?? undefined // Garantir que price seja number | undefined
+                price: record.price ?? 0,
+                location: {
+                  cep: formatCep(record.location.cep),
+                  address: record.location.address
+                },
+                phone: formatPhone(record.phone)
               })
             }}
             size="small"
@@ -249,113 +260,19 @@ const AdsListView = () => {
     }
   ]
 
-  // // Handlers para adicionar arquivos localmente
-  // const handleImageSelect = (info: any) => {
-  //   const files = Array.from(info.fileList).map(
-  //     (item: any) => item.originFileObj as File
-  //   )
-  //   const currentPhotos = watch('photos')
-  //   const newPhotos = [...currentPhotos, ...files].slice(0, 5)
-  //   setValue('photos', newPhotos, { shouldValidate: true })
-  // }
-
-  // const handleVideoSelect = (info: any) => {
-  //   const file = info.file.originFileObj as File
-  //   setValue('video', file, { shouldValidate: true })
-  // }
-
-  // // Função para deletar imagem temporária
-  // const handleDeleteImage = (index: number) => {
-  //   const currentPhotos = watch('photos')
-  //   const updatedPhotos = currentPhotos.filter((_, i) => i !== index)
-  //   setValue('photos', updatedPhotos, { shouldValidate: true })
-  //   message.success('Imagem removida com sucesso!')
-  // }
-
-  // // Função para deletar vídeo temporário
-  // const handleDeleteVideo = () => {
-  //   setValue('video', undefined, { shouldValidate: true })
-  //   message.success('Vídeo removido com sucesso!')
-  // }
-
-  // const uploadButton = () => (
-  //   <S.AdsUpload>
-  //     <LuPlus />
-  //     <p>Upload</p>
-  //   </S.AdsUpload>
-  // )
-
   // Submissão do formulário com upload para Firebase
   const onCreateAdSubmit = async (data: AdFormData) => {
-    try {
-      // Upload das imagens
-      // const photoUrls = await Promise.all(
-      //   data.photos.map((file, index) =>
-      //     uploadFileToFirebase(
-      //       file,
-      //       `ads/images/${Date.now()}_${index}_${file.name}`
-      //     )
-      //   )
-      // )
-
-      // Upload do vídeo (se existir)
-      // let videoUrl: string | undefined
-      // if (data.video) {
-      //   videoUrl = await uploadFileToFirebase(
-      //     data.video,
-      //     `ads/videos/${Date.now()}_${data.video.name}`
-      //   )
-      // }
-
-      // Criar o anúncio com as URLs
-      await createAd({
-        ...data
-        // photos: photoUrls,
-        // video: videoUrl
-      })
-
-      setCreateModalVisible(false)
-      reset()
-      message.success('Anúncio criado com sucesso!')
-    } catch (error) {
-      message.error('Erro ao criar o anúncio.')
-    }
+    await createAd(data)
+    setCreateModalVisible(false)
+    reset()
   }
 
   // Submissão do formulário de edição
   const onEditAdSubmit = async (data: AdFormData) => {
     if (selectedAd) {
-      try {
-        // const photoUrls = await Promise.all(
-        //   data.photos.map((file, index) =>
-        //     typeof file === 'string'
-        //       ? file
-        //       : uploadFileToFirebase(
-        //           file,
-        //           `ads/images/${Date.now()}_${index}_${file.name}`
-        //         )
-        //   )
-        // )
-
-        // let videoUrl: string | undefined = undefined
-        // if (data.video && typeof data.video !== 'string') {
-        //   videoUrl = await uploadFileToFirebase(
-        //     data.video,
-        //     `ads/videos/${Date.now()}_${data.video.name}`
-        //   )
-        // }
-
-        await updateAd(selectedAd.id, {
-          ...data
-          // photos: photoUrls,
-          // video: videoUrl
-        })
-        setEditModalVisible(false)
-        reset()
-        message.success('Anúncio atualizado com sucesso!')
-      } catch (error) {
-        message.error('Erro ao atualizar o anúncio.')
-      }
+      await updateAd(selectedAd.id, data)
+      setEditModalVisible(false)
+      reset()
     }
   }
 
@@ -365,40 +282,58 @@ const AdsListView = () => {
       await deleteAd(selectedAd.id)
       setDeleteModalVisible(false)
       setSelectedAd(null)
-      message.success('Anúncio excluído com sucesso!')
     }
   }
 
-  // Campos para o DetailsForm
+  // Campos para o DetailsForm com tags para categoria e condição
   const adDetailsFields = [
     { key: 'title', label: 'Título' },
     { key: 'description', label: 'Descrição' },
     {
       key: 'price',
       label: 'Preço',
-      render: (value: number) => `R$ ${value.toFixed(2)}`
+      render: (value: number) => formatPrice(value)
     },
-    { key: 'categoryId', label: 'Categoria' },
-    { key: 'condition', label: 'Condição' },
+    {
+      key: 'categoryId',
+      label: 'Categoria',
+      render: (value: string) => <Tag>{getCategoryLabel(value)}</Tag>
+    },
+    {
+      key: 'condition',
+      label: 'Condição',
+      render: (value: string) => <Tag>{getConditionLabel(value)}</Tag>
+    },
     {
       key: 'location',
       label: 'CEP',
-      render: (value: IAd['location']) => value.cep
+      render: (value: IAd['location']) => formatCep(value.cep)
     },
     {
       key: 'location',
       label: 'Endereço',
-      render: (value: IAd['location']) => value.address
+      render: (value: IAd['location']) => value.address || ''
     },
     {
-      key: 'photos',
-      label: 'Fotos',
-      render: (value: string[] | undefined) => value?.join(', ') || 'Nenhuma'
+      key: 'phone',
+      label: 'Telefone',
+      render: (value: string) => formatPhone(value)
     },
-    { key: 'video', label: 'Vídeo' },
-    { key: 'status', label: 'Status' },
-    { key: 'createdAt', label: 'Criado em' },
-    { key: 'updatedAt', label: 'Atualizado em' }
+    {
+      key: 'status',
+      label: 'Status',
+      render: (value: string) => <Tag>{getStatusLabel(value)}</Tag>
+    },
+    {
+      key: 'createdAt',
+      label: 'Criado em',
+      render: (value: string) => formatDateTime(value)
+    },
+    {
+      key: 'updatedAt',
+      label: 'Atualizado em',
+      render: (value: string) => formatDateTime(value)
+    }
   ]
 
   return (
@@ -443,108 +378,6 @@ const AdsListView = () => {
         }
       >
         <S.AdForm onFinish={handleSubmit(onCreateAdSubmit)} layout="vertical">
-          {/* Upload de Imagens */}
-          {/* <Controller
-            name="photos"
-            control={control}
-            render={({ field }) => (
-              <Form.Item
-                label="Fotos (mínimo 1, máximo 5, apenas JPG/PNG)"
-                validateStatus={errors.photos ? 'error' : ''}
-                help={errors.photos?.message}
-              >
-                <S.AdFormUploadMedia>
-                  <Upload
-                    name="photos"
-                    listType="picture-card"
-                    multiple
-                    beforeUpload={beforeUploadImage}
-                    onChange={handleImageSelect}
-                    fileList={[]}
-                    accept="image/jpeg,image/png"
-                    showUploadList={false}
-                    disabled
-                  >
-                    {field.value.length < 5 && uploadButton()}
-                  </Upload>
-                  <S.AdFormMediasWrapper>
-                    {field.value.map((image, index) => {
-                      const imageUrl = URL.createObjectURL(image)
-                      return (
-                        <S.AdFormMediaContainer key={image.name}>
-                          <S.AdFormMedia
-                            src={imageUrl}
-                            preview={{ src: imageUrl }}
-                            onLoad={() => URL.revokeObjectURL(imageUrl)}
-                            width={80}
-                            height={80}
-                          />
-                          <S.AdFormMediaDelete
-                            icon={<LuTrash />}
-                            danger
-                            size="small"
-                            onClick={() => handleDeleteImage(index)}
-                          />
-                        </S.AdFormMediaContainer>
-                      )
-                    })}
-                  </S.AdFormMediasWrapper>
-                </S.AdFormUploadMedia>
-              </Form.Item>
-            )}
-          /> */}
-          {/* Upload de Vídeo */}
-          {/* <Controller
-            name="video"
-            control={control}
-            render={({ field }) => (
-              <Form.Item
-                label="Vídeo (opcional, máximo 1, apenas MP4)"
-                validateStatus={errors.video ? 'error' : ''}
-                help={errors.video?.message}
-              >
-                <S.AdFormUploadMedia>
-                  <Upload
-                    name="video"
-                    listType="picture-card"
-                    beforeUpload={beforeUploadVideo}
-                    onChange={handleVideoSelect}
-                    fileList={[]}
-                    accept="video/mp4"
-                    showUploadList={false}
-                    disabled
-                  >
-                    {!field.value && uploadButton()}
-                  </Upload>
-                  {field.value && (
-                    <S.AdFormMediasWrapper>
-                      <S.AdFormMediaContainer key={field.value.name}>
-                        <S.AdFormMedia
-                          src={URL.createObjectURL(field.value)}
-                          preview={{ src: URL.createObjectURL(field.value) }}
-                          onLoad={() =>
-                            URL.revokeObjectURL(
-                              field.value
-                                ? URL.createObjectURL(field.value)
-                                : ''
-                            )
-                          }
-                          width={80}
-                          height={80}
-                        />
-                        <S.AdFormMediaDelete
-                          icon={<LuTrash />}
-                          danger
-                          size="small"
-                          onClick={handleDeleteVideo} // Usar função correta para vídeo
-                        />
-                      </S.AdFormMediaContainer>
-                    </S.AdFormMediasWrapper>
-                  )}
-                </S.AdFormUploadMedia>
-              </Form.Item>
-            )}
-          /> */}
           <Controller
             name="title"
             control={control}
@@ -584,15 +417,15 @@ const AdsListView = () => {
                 help={errors.price?.message}
               >
                 <Input
-                  type="number"
                   {...field}
-                  value={field.value === undefined ? '' : field.value}
-                  onChange={(e) =>
-                    field.onChange(
-                      e.target.value ? parseFloat(e.target.value) : undefined
-                    )
-                  }
-                  placeholder="Ex.: 500.00"
+                  value={field.value ? formatPrice(field.value) : ''}
+                  onChange={(e) => {
+                    const value = e.target.value
+                      .replace(/[^\d,]/g, '')
+                      .replace(',', '.')
+                    field.onChange(parseFloat(value) || 0)
+                  }}
+                  inputMode="numeric"
                 />
               </Form.Item>
             )}
@@ -640,7 +473,16 @@ const AdsListView = () => {
                 validateStatus={errors.location?.cep ? 'error' : ''}
                 help={errors.location?.cep?.message}
               >
-                <Input {...field} placeholder="Ex.: 12345-678" />
+                <Input
+                  {...field}
+                  placeholder="Ex.: 12345-678"
+                  maxLength={9}
+                  value={formatCep(field.value)}
+                  onChange={(e) =>
+                    field.onChange(e.target.value.replace(/\D/g, ''))
+                  }
+                  inputMode="numeric"
+                />
               </Form.Item>
             )}
           />
@@ -653,10 +495,28 @@ const AdsListView = () => {
                 validateStatus={errors.location?.address ? 'error' : ''}
                 help={errors.location?.address?.message}
               >
+                <Input {...field} disabled />
+              </Form.Item>
+            )}
+          />
+          <Controller
+            name="phone"
+            control={control}
+            render={({ field }) => (
+              <Form.Item
+                label="Telefone"
+                validateStatus={errors.phone ? 'error' : ''}
+                help={errors.phone?.message}
+              >
                 <Input
                   {...field}
-                  placeholder="Ex.: Rua das Flores, 123, São Paulo - SP"
-                  disabled
+                  placeholder="Ex.: (11) 98765-4321"
+                  maxLength={15}
+                  value={formatPhone(field.value)}
+                  onChange={(e) =>
+                    field.onChange(e.target.value.replace(/\D/g, ''))
+                  }
+                  inputMode="tel"
                 />
               </Form.Item>
             )}
@@ -740,14 +600,15 @@ const AdsListView = () => {
                 help={errors.price?.message}
               >
                 <Input
-                  type="number"
                   {...field}
-                  value={field.value === undefined ? '' : field.value}
-                  onChange={(e) =>
-                    field.onChange(
-                      e.target.value ? parseFloat(e.target.value) : undefined
-                    )
-                  }
+                  value={formatPrice(field.value)}
+                  onChange={(e) => {
+                    const value = e.target.value
+                      .replace(/[^\d,]/g, '')
+                      .replace(',', '.')
+                    field.onChange(parseFloat(value) || 0)
+                  }}
+                  inputMode="numeric"
                 />
               </Form.Item>
             )}
@@ -763,7 +624,6 @@ const AdsListView = () => {
               >
                 <Select
                   {...field}
-                  placeholder="Selecione uma subcategoria"
                   options={convertCategoriesToOptions(SPORT_CATEGORIES_V1)}
                 />
               </Form.Item>
@@ -795,6 +655,26 @@ const AdsListView = () => {
                 help={errors.location?.address?.message}
               >
                 <Input {...field} disabled />
+              </Form.Item>
+            )}
+          />
+          <Controller
+            name="phone"
+            control={control}
+            render={({ field }) => (
+              <Form.Item
+                label="Telefone"
+                validateStatus={errors.phone ? 'error' : ''}
+                help={errors.phone?.message}
+              >
+                <Input
+                  {...field}
+                  value={formatPhone(field.value)}
+                  onChange={(e) =>
+                    field.onChange(e.target.value.replace(/\D/g, ''))
+                  }
+                  inputMode="tel"
+                />
               </Form.Item>
             )}
           />
@@ -844,7 +724,7 @@ const AdsListView = () => {
       <FormModal<any>
         visible={isDetailsModalVisible}
         onClose={() => setDetailsModalVisible(false)}
-        title={`Detalhes do Anúncio: ${selectedAd?.title}`}
+        title={`Detalhes do Anúncio: #${selectedAd?.id}`}
         formMethods={{} as any}
       >
         {selectedAd && (

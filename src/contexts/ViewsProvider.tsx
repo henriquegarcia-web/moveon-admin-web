@@ -8,6 +8,8 @@ import {
   ReactNode
 } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { App } from 'antd'
+
 import { ADMIN_MENUS, IMenu } from '@/data/menus'
 
 interface ViewsContextData {
@@ -20,6 +22,7 @@ interface ViewsContextData {
 const ViewsContext = createContext<ViewsContextData>({} as ViewsContextData)
 
 export const ViewsProvider = ({ children }: { children: ReactNode }) => {
+  const { message } = App.useApp()
   const { menuId } = useParams<{ menuId?: string }>()
   const navigate = useNavigate()
 

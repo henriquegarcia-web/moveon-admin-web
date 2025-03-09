@@ -1,4 +1,3 @@
-// src/screens/DashboardScreen/views/AdsApprovalView/index.tsx
 import { useState } from 'react'
 import * as S from './styles'
 import { LuCheck, LuX, LuEye } from 'react-icons/lu'
@@ -7,9 +6,21 @@ import { ViewHeader, ConfirmModal, FormModal, DetailsForm } from '@/components'
 import Table, { TableColumn } from '@/components/Table'
 import { IAd } from '@/types'
 import { useAds } from '@/contexts/AdsProvider'
+import { formatDateTime } from '@/utils/functions/convertTimestamp'
 
 const AdsApprovalView = () => {
-  const { ads, loading, approveAd, rejectAd } = useAds()
+  const {
+    ads,
+    loading,
+    approveAd,
+    rejectAd,
+    formatCep,
+    formatPhone,
+    formatPrice,
+    getCategoryLabel,
+    getConditionLabel,
+    getStatusLabel
+  } = useAds()
   const [searchTerm, setSearchTerm] = useState('')
   const [isApproveModalVisible, setApproveModalVisible] = useState(false)
   const [isRejectModalVisible, setRejectModalVisible] = useState(false)
@@ -37,7 +48,7 @@ const AdsApprovalView = () => {
       title: 'Preço',
       dataIndex: 'price',
       key: 'price',
-      render: (value) => `R$ ${value.toFixed(2)}`
+      render: (value) => formatPrice(value)
     },
     {
       title: 'Status',
@@ -99,24 +110,55 @@ const AdsApprovalView = () => {
     }
   }
 
-  // Campos para o DetailsForm (usado como fallback, mas não principal aqui)
+  // Campos para o DetailsForm com tags para categoria e condição, alinhado com AdsListView
   const adDetailsFields = [
     { key: 'title', label: 'Título' },
     { key: 'description', label: 'Descrição' },
     {
       key: 'price',
       label: 'Preço',
-      render: (value: number) => `R$ ${value.toFixed(2)}`
+      render: (value: number) => formatPrice(value)
     },
-    { key: 'categoryId', label: 'Categoria' },
-    { key: 'condition', label: 'Condição' },
+    {
+      key: 'categoryId',
+      label: 'Categoria',
+      render: (value: string) => <Tag>{getCategoryLabel(value)}</Tag>
+    },
+    {
+      key: 'condition',
+      label: 'Condição',
+      render: (value: string) => <Tag>{getConditionLabel(value)}</Tag>
+    },
     {
       key: 'location',
-      label: 'Localização',
-      render: (value: IAd['location']) => value.address
+      label: 'CEP',
+      render: (value: IAd['location']) => formatCep(value.cep)
     },
-    { key: 'contactMethod', label: 'Método de Contato' },
-    { key: 'createdAt', label: 'Criado em' }
+    {
+      key: 'location',
+      label: 'Endereço',
+      render: (value: IAd['location']) => value.address || ''
+    },
+    {
+      key: 'phone',
+      label: 'Telefone',
+      render: (value: string) => formatPhone(value)
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (value: string) => <Tag>{getStatusLabel(value)}</Tag>
+    },
+    {
+      key: 'createdAt',
+      label: 'Criado em',
+      render: (value: string) => formatDateTime(value)
+    },
+    {
+      key: 'updatedAt',
+      label: 'Atualizado em',
+      render: (value: string) => formatDateTime(value)
+    }
   ]
 
   return (
@@ -143,7 +185,7 @@ const AdsApprovalView = () => {
       <FormModal<any>
         visible={isApproveModalVisible}
         onClose={() => setApproveModalVisible(false)}
-        title={`Aprovar Anúncio: ${selectedAd?.title}`}
+        title={`Aprovar Anúncio: ${selectedAd?.id}`}
         formMethods={{} as any}
       >
         {selectedAd && (
@@ -182,7 +224,7 @@ const AdsApprovalView = () => {
       <FormModal<any>
         visible={isRejectModalVisible}
         onClose={() => setRejectModalVisible(false)}
-        title={`Rejeitar Anúncio: ${selectedAd?.title}`}
+        title={`Rejeitar Anúncio: #${selectedAd?.id}`}
         formMethods={{} as any}
       >
         {selectedAd && (
