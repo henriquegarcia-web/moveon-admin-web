@@ -157,12 +157,13 @@ const BannersManagementView = () => {
 
   // Colunas da tabela
   const columns: TableColumn<IBanner>[] = [
-    { title: 'ID', dataIndex: 'id', key: 'id', width: 100 },
+    { title: 'ID', dataIndex: 'id', key: 'id', width: 135 },
     {
       title: 'Título',
       dataIndex: 'title',
       key: 'title',
-      sorter: (a, b) => a.title.localeCompare(b.title)
+      sorter: (a, b) => a.title.localeCompare(b.title),
+      width: 240
     },
     {
       title: 'Imagem Desktop',
@@ -170,7 +171,7 @@ const BannersManagementView = () => {
       render: (_, record) => (
         <S.ImageThumbnail src={record.desktopImageUrl} alt={record.title} />
       ),
-      width: 150
+      width: 220
     },
     {
       title: 'Posição',
@@ -178,7 +179,8 @@ const BannersManagementView = () => {
       key: 'position',
       render: (value) => (
         <Tag>{getBannerPositionDetail(value)?.label || value}</Tag>
-      )
+      ),
+      width: 130
     },
     {
       title: 'Status',
@@ -190,12 +192,13 @@ const BannersManagementView = () => {
             {status?.label || record.status}
           </Tag>
         )
-      }
+      },
+      width: 100
     },
     {
       title: 'Ações',
       key: 'actions',
-      width: 150,
+      width: 155,
       render: (_, record) => (
         <S.ActionButtons>
           <Button

@@ -32,6 +32,7 @@ export const StyledTable = styled(Table)<{ empty: number }>`
     font-size: ${Fonts.xxxs};
     line-height: ${Fonts.xxxs};
     font-weight: 400;
+
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -45,7 +46,6 @@ export const StyledTable = styled(Table)<{ empty: number }>`
   .ant-table-row {
     td {
       align-items: center;
-      height: 53px !important;
     }
 
     &:last-of-type td {
@@ -67,13 +67,7 @@ export const StyledTable = styled(Table)<{ empty: number }>`
         .map(
           (col, index) => `
         &:nth-child(${index + 1}) {
-          width: ${
-            col.width
-              ? typeof col.width === 'number'
-                ? `${col.width}px`
-                : col.width
-              : 'auto'
-          };
+          width: auto;
           min-width: 50px; 
           max-width: ${
             col.width
