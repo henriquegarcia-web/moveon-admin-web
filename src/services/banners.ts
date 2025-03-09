@@ -2,7 +2,9 @@ import { db } from '@/firebase/config'
 import { ref, set, update, remove } from 'firebase/database'
 import { IBanner } from '@/types'
 
-export const createBanner = async (bannerData: Omit<IBanner, 'id'>) => {
+export const createBanner = async (
+  bannerData: Omit<IBanner, 'id' | 'createdAt'>
+) => {
   const bannerId = Date.now().toString()
   const bannerRef = ref(db, `banners/${bannerId}`)
   await set(bannerRef, {

@@ -130,7 +130,8 @@ export interface IAd {
 export interface IBanner {
   id: string
   title: string
-  imageUrl: string
+  desktopImageUrl: string
+  mobileImageUrl: string
   position: 'home-top' | 'home-middle' | 'search-side' | 'other'
   link?: string
   status: 'active' | 'inactive' | 'scheduled'

@@ -9,12 +9,9 @@ import {
   Form,
   Select,
   Input,
-  Upload,
   DatePicker,
-  Switch,
   ConfigProvider
 } from 'antd'
-import { UploadOutlined } from '@ant-design/icons'
 import { Controller, useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
@@ -33,7 +30,12 @@ const bannerSchema = yup
       .string()
       .required('O título é obrigatório')
       .max(100, 'O título deve ter no máximo 100 caracteres'),
-    imageUrl: yup.string().required('A imagem é obrigatória'),
+    desktopImageUrl: yup
+      .string()
+      .required('A URL da imagem desktop é obrigatória'),
+    mobileImageUrl: yup
+      .string()
+      .required('A URL da imagem mobile é obrigatória'),
     position: yup
       .mixed<'home-top' | 'home-middle' | 'search-side' | 'other'>()
       .oneOf(
@@ -70,7 +72,8 @@ const bannerSchema = yup
 
 type BannerFormData = {
   title: string
-  imageUrl: string
+  desktopImageUrl: string
+  mobileImageUrl: string
   position: 'home-top' | 'home-middle' | 'search-side' | 'other'
   link?: string
   startDate: string
@@ -87,7 +90,6 @@ const BannersManagementView = () => {
     updateBanner,
     deleteBanner,
     toggleBannerStatus,
-    uploadBannerImage,
     getPerformanceData
   } = useBanners()
   const [searchTerm, setSearchTerm] = useState('')
@@ -104,14 +106,15 @@ const BannersManagementView = () => {
     handleSubmit,
     formState: { errors, isSubmitting, isValid },
     reset,
-    setValue
+    watch
   } = useForm<BannerFormData>({
     mode: 'onChange',
     reValidateMode: 'onChange',
     resolver: yupResolver(bannerSchema),
     defaultValues: {
       title: '',
-      imageUrl: '',
+      desktopImageUrl: '',
+      mobileImageUrl: '',
       position: 'home-top',
       link: '',
       startDate: moment().toISOString(),
@@ -120,6 +123,10 @@ const BannersManagementView = () => {
       priority: 1
     }
   })
+
+  // Observa os valores dos campos de URL para pré-visualização
+  const desktopImageUrl = watch('desktopImageUrl')
+  const mobileImageUrl = watch('mobileImageUrl')
 
   // Filtragem dos banners
   const filteredBanners = banners.filter(
@@ -131,12 +138,7 @@ const BannersManagementView = () => {
 
   // Colunas da tabela
   const columns: TableColumn<IBanner>[] = [
-    {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      width: 100
-    },
+    { title: 'ID', dataIndex: 'id', key: 'id', width: 100 },
     {
       title: 'Título',
       dataIndex: 'title',
@@ -144,10 +146,10 @@ const BannersManagementView = () => {
       sorter: (a, b) => a.title.localeCompare(b.title)
     },
     {
-      title: 'Imagem',
-      key: 'imageUrl',
+      title: 'Imagem Desktop',
+      key: 'desktopImageUrl',
       render: (_, record) => (
-        <S.ImageThumbnail src={record.imageUrl} alt={record.title} />
+        <S.ImageThumbnail src={record.desktopImageUrl} alt={record.title} />
       )
     },
     {
@@ -197,9 +199,15 @@ const BannersManagementView = () => {
               setSelectedBanner(record)
               setEditModalVisible(true)
               reset({
-                ...record,
+                title: record.title,
+                desktopImageUrl: record.desktopImageUrl,
+                mobileImageUrl: record.mobileImageUrl,
+                position: record.position,
+                link: record.link,
                 startDate: record.startDate,
-                endDate: record.endDate || null
+                endDate: record.endDate || null,
+                status: record.status,
+                priority: record.priority
               })
             }}
             size="small"
@@ -231,10 +239,7 @@ const BannersManagementView = () => {
 
   // Submissão do formulário de criação
   const onCreateBannerSubmit = async (data: BannerFormData) => {
-    const formattedData = {
-      ...data,
-      endDate: data.endDate || undefined
-    }
+    const formattedData = { ...data, endDate: data.endDate || undefined }
     await createBanner(formattedData)
     setCreateModalVisible(false)
     reset()
@@ -243,10 +248,7 @@ const BannersManagementView = () => {
   // Submissão do formulário de edição
   const onEditBannerSubmit = async (data: BannerFormData) => {
     if (selectedBanner) {
-      const formattedData = {
-        ...data,
-        endDate: data.endDate || undefined
-      }
+      const formattedData = { ...data, endDate: data.endDate || undefined }
       await updateBanner(selectedBanner.id, formattedData)
       setEditModalVisible(false)
       reset()
@@ -267,9 +269,18 @@ const BannersManagementView = () => {
     { key: 'id', label: 'ID' },
     { key: 'title', label: 'Título' },
     {
-      key: 'imageUrl',
-      label: 'Imagem',
-      render: (value: string) => <S.ImagePreview src={value} alt="Banner" />
+      key: 'desktopImageUrl',
+      label: 'Imagem Desktop',
+      render: (value: string) => (
+        <S.ImagePreview src={value} alt="Banner Desktop" />
+      )
+    },
+    {
+      key: 'mobileImageUrl',
+      label: 'Imagem Mobile',
+      render: (value: string) => (
+        <S.ImagePreview src={value} alt="Banner Mobile" />
+      )
     },
     { key: 'position', label: 'Posição' },
     {
@@ -391,28 +402,51 @@ const BannersManagementView = () => {
             )}
           />
           <Controller
-            name="imageUrl"
+            name="desktopImageUrl"
             control={control}
             render={({ field }) => (
               <Form.Item
-                label="Imagem"
-                validateStatus={errors.imageUrl ? 'error' : ''}
-                help={errors.imageUrl?.message}
+                label="URL da Imagem Desktop"
+                validateStatus={errors.desktopImageUrl ? 'error' : ''}
+                help={errors.desktopImageUrl?.message}
               >
-                <Upload
-                  accept=".jpg,.png"
-                  beforeUpload={(file) => {
-                    uploadBannerImage(file).then((url) =>
-                      setValue('imageUrl', url)
-                    )
-                    return false // Impede upload automático
-                  }}
-                  maxCount={1}
-                >
-                  <Button icon={<UploadOutlined />}>Selecionar Imagem</Button>
-                </Upload>
-                {field.value && (
-                  <S.ImagePreview src={field.value} alt="Pré-visualização" />
+                <Input
+                  {...field}
+                  placeholder="Ex.: https://site.com/banner-desktop.jpg"
+                />
+                <S.ImageSizeHint>
+                  Tamanho recomendado: 1400px x 400px
+                </S.ImageSizeHint>
+                {desktopImageUrl && (
+                  <S.ImagePreview
+                    src={desktopImageUrl}
+                    alt="Pré-visualização Desktop"
+                  />
+                )}
+              </Form.Item>
+            )}
+          />
+          <Controller
+            name="mobileImageUrl"
+            control={control}
+            render={({ field }) => (
+              <Form.Item
+                label="URL da Imagem Mobile"
+                validateStatus={errors.mobileImageUrl ? 'error' : ''}
+                help={errors.mobileImageUrl?.message}
+              >
+                <Input
+                  {...field}
+                  placeholder="Ex.: https://site.com/banner-mobile.jpg"
+                />
+                <S.ImageSizeHint>
+                  Tamanho recomendado: 900px x 400px
+                </S.ImageSizeHint>
+                {mobileImageUrl && (
+                  <S.ImagePreview
+                    src={mobileImageUrl}
+                    alt="Pré-visualização Mobile"
+                  />
                 )}
               </Form.Item>
             )}
@@ -431,7 +465,7 @@ const BannersManagementView = () => {
                   options={[
                     { value: 'home-top', label: 'Home - Topo' },
                     { value: 'home-middle', label: 'Home - Meio' },
-                    { value: 'search-side', label: 'Pesquisa' },
+                    { value: 'search-side', label: 'Pesquisa - Lateral' },
                     { value: 'other', label: 'Outro' }
                   ]}
                 />
@@ -569,28 +603,51 @@ const BannersManagementView = () => {
             )}
           />
           <Controller
-            name="imageUrl"
+            name="desktopImageUrl"
             control={control}
             render={({ field }) => (
               <Form.Item
-                label="Imagem"
-                validateStatus={errors.imageUrl ? 'error' : ''}
-                help={errors.imageUrl?.message}
+                label="URL da Imagem Desktop"
+                validateStatus={errors.desktopImageUrl ? 'error' : ''}
+                help={errors.desktopImageUrl?.message}
               >
-                <Upload
-                  accept=".jpg,.png"
-                  beforeUpload={(file) => {
-                    uploadBannerImage(file).then((url) =>
-                      setValue('imageUrl', url)
-                    )
-                    return false
-                  }}
-                  maxCount={1}
-                >
-                  <Button icon={<UploadOutlined />}>Alterar Imagem</Button>
-                </Upload>
-                {field.value && (
-                  <S.ImagePreview src={field.value} alt="Pré-visualização" />
+                <Input
+                  {...field}
+                  placeholder="Ex.: https://site.com/banner-desktop.jpg"
+                />
+                <S.ImageSizeHint>
+                  Tamanho recomendado: 1400px x 400px
+                </S.ImageSizeHint>
+                {desktopImageUrl && (
+                  <S.ImagePreview
+                    src={desktopImageUrl}
+                    alt="Pré-visualização Desktop"
+                  />
+                )}
+              </Form.Item>
+            )}
+          />
+          <Controller
+            name="mobileImageUrl"
+            control={control}
+            render={({ field }) => (
+              <Form.Item
+                label="URL da Imagem Mobile"
+                validateStatus={errors.mobileImageUrl ? 'error' : ''}
+                help={errors.mobileImageUrl?.message}
+              >
+                <Input
+                  {...field}
+                  placeholder="Ex.: https://site.com/banner-mobile.jpg"
+                />
+                <S.ImageSizeHint>
+                  Tamanho recomendado: 900px x 400px
+                </S.ImageSizeHint>
+                {mobileImageUrl && (
+                  <S.ImagePreview
+                    src={mobileImageUrl}
+                    alt="Pré-visualização Mobile"
+                  />
                 )}
               </Form.Item>
             )}

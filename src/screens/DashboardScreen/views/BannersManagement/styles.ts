@@ -1,10 +1,8 @@
 // src/screens/DashboardScreen/views/BannersManagementView/styles.ts
 
 import styled from 'styled-components'
-import { Input } from 'antd'
-
-import { FormattedForm } from '@/utils/styles/common'
-import { View, ViewContent } from '@/utils/styles/common'
+import { FormattedForm, View, ViewContent } from '@/utils/styles/common'
+import { Form, Input } from 'antd'
 
 export const BannersManagementView = styled(View)`
   display: flex;
@@ -34,10 +32,15 @@ export const ImageThumbnail = styled.img`
 
 export const ImagePreview = styled.img`
   width: 100%;
-  max-width: 300px;
   height: auto;
   margin-top: 8px;
   border-radius: 4px;
+`
+
+export const ImageSizeHint = styled.div`
+  font-size: 12px;
+  color: #888;
+  margin-top: 4px;
 `
 
 export const BannerForm = styled(FormattedForm)`

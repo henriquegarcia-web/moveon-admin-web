@@ -1,3 +1,5 @@
+// src/contexts/BannersProvider.tsx
+
 import {
   createContext,
   useContext,
@@ -6,12 +8,7 @@ import {
   ReactNode
 } from 'react'
 import { ref, onValue } from 'firebase/database'
-import { db, storage } from '@/firebase/config'
-import {
-  ref as storageRef,
-  uploadBytes,
-  getDownloadURL
-} from 'firebase/storage'
+import { db } from '@/firebase/config'
 import { IBanner } from '@/types'
 import { useAuth } from './AuthProvider'
 import { App } from 'antd'
@@ -34,7 +31,6 @@ interface BannersContextData {
   ) => Promise<void>
   deleteBanner: (bannerId: string) => Promise<void>
   toggleBannerStatus: (bannerId: string, currentStatus: string) => Promise<void>
-  uploadBannerImage: (file: File) => Promise<string>
   getPerformanceData: (bannerId: string) => { date: string; clicks: number }[]
 }
 
@@ -75,8 +71,7 @@ export const BannersProvider = ({ children }: { children: ReactNode }) => {
       if (!admin?.id) throw new Error('Administrador não autenticado')
       await createBannerService({
         ...bannerData,
-        createdBy: admin.id,
-        createdAt: new Date().toISOString()
+        createdBy: admin.id
       })
       message.success('Banner criado com sucesso!')
     } catch (error: any) {
@@ -124,17 +119,6 @@ export const BannersProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-  const uploadBannerImage = async (file: File): Promise<string> => {
-    try {
-      const fileRef = storageRef(storage, `banners/${Date.now()}_${file.name}`)
-      await uploadBytes(fileRef, file)
-      const url = await getDownloadURL(fileRef)
-      return url
-    } catch (error: any) {
-      throw new Error('Erro ao fazer upload da imagem')
-    }
-  }
-
   // Dados fictícios para o gráfico (substituir por integração real no futuro)
   const getPerformanceData = (bannerId: string) => {
     return [
@@ -152,7 +136,6 @@ export const BannersProvider = ({ children }: { children: ReactNode }) => {
     updateBanner,
     deleteBanner,
     toggleBannerStatus,
-    uploadBannerImage,
     getPerformanceData
   }
 
