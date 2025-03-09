@@ -21,7 +21,11 @@ import { useAuth } from './AuthProvider'
 import {
   SPORT_CATEGORIES_V1,
   ADS_STATUS_TYPES,
-  PRODUCT_CONDITION_TYPES
+  PRODUCT_CONDITION_TYPES,
+  Category,
+  AdStatus,
+  ProductCondition,
+  Subcategory
 } from '@/data/admin'
 
 interface AdsContextData {
@@ -37,9 +41,9 @@ interface AdsContextData {
   formatCep: (cep: string) => string
   formatPhone: (phone: string) => string
   formatPrice: (price: number) => string
-  getCategoryLabel: (categoryId: string) => string
-  getConditionLabel: (condition: string) => string
-  getStatusLabel: (status: string) => string
+  getCategoryDatail: (categoryId: string) => Subcategory | null
+  getStatusDatail: (status: string) => AdStatus | null
+  getConditionDatail: (condition: string) => ProductCondition | null
 }
 
 const AdsContext = createContext<AdsContextData>({} as AdsContextData)
@@ -101,25 +105,25 @@ export const AdsProvider = ({ children }: { children: ReactNode }) => {
     })
   }
 
-  const getCategoryLabel = (categoryId: string): string => {
+  const getCategoryDatail = (categoryId: string): Subcategory | null => {
     for (const category of SPORT_CATEGORIES_V1) {
-      if (category.id === categoryId) return category.name
+      if (category.id === categoryId) return category || null
       const subcategory = category.subcategories.find(
         (sub) => sub.id === categoryId
       )
-      if (subcategory) return subcategory.name
+      if (subcategory) return subcategory || null
     }
-    return categoryId
+    return null
   }
 
-  const getConditionLabel = (condition: string): string => {
+  const getConditionDatail = (condition: string): ProductCondition | null => {
     const cond = PRODUCT_CONDITION_TYPES.find((c) => c.key === condition)
-    return cond ? cond.label : condition
+    return cond || null
   }
 
-  const getStatusLabel = (status: string): string => {
+  const getStatusDatail = (status: string): AdStatus | null => {
     const statusObj = ADS_STATUS_TYPES.find((s) => s.key === status)
-    return statusObj ? statusObj.label : status
+    return statusObj || null
   }
 
   const createAdHandler = async (
@@ -202,9 +206,9 @@ export const AdsProvider = ({ children }: { children: ReactNode }) => {
     formatCep,
     formatPhone,
     formatPrice,
-    getCategoryLabel,
-    getConditionLabel,
-    getStatusLabel
+    getCategoryDatail,
+    getConditionDatail,
+    getStatusDatail
   }
 
   return (

@@ -122,9 +122,9 @@ const AdsListView = () => {
     formatCep,
     formatPhone,
     formatPrice,
-    getCategoryLabel,
-    getConditionLabel,
-    getStatusLabel
+    getCategoryDatail,
+    getConditionDatail,
+    getStatusDatail
   } = useAds()
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<AdStatusType | 'all'>('all')
@@ -297,12 +297,12 @@ const AdsListView = () => {
     {
       key: 'categoryId',
       label: 'Categoria',
-      render: (value: string) => <Tag>{getCategoryLabel(value)}</Tag>
+      render: (value: string) => <Tag>{getCategoryDatail(value)?.name}</Tag>
     },
     {
       key: 'condition',
       label: 'Condição',
-      render: (value: string) => <Tag>{getConditionLabel(value)}</Tag>
+      render: (value: string) => <Tag>{getConditionDatail(value)?.label}</Tag>
     },
     {
       key: 'location',
@@ -322,7 +322,11 @@ const AdsListView = () => {
     {
       key: 'status',
       label: 'Status',
-      render: (value: string) => <Tag>{getStatusLabel(value)}</Tag>
+      render: (value: string) => (
+        <Tag color={getStatusDatail(value)?.color}>
+          {getStatusDatail(value)?.label}
+        </Tag>
+      )
     },
     {
       key: 'createdAt',

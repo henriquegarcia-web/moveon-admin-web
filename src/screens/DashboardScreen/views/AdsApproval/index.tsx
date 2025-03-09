@@ -17,9 +17,9 @@ const AdsApprovalView = () => {
     formatCep,
     formatPhone,
     formatPrice,
-    getCategoryLabel,
-    getConditionLabel,
-    getStatusLabel
+    getCategoryDatail,
+    getStatusDatail,
+    getConditionDatail
   } = useAds()
   const [searchTerm, setSearchTerm] = useState('')
   const [isApproveModalVisible, setApproveModalVisible] = useState(false)
@@ -122,12 +122,12 @@ const AdsApprovalView = () => {
     {
       key: 'categoryId',
       label: 'Categoria',
-      render: (value: string) => <Tag>{getCategoryLabel(value)}</Tag>
+      render: (value: string) => <Tag>{getCategoryDatail(value)?.name}</Tag>
     },
     {
       key: 'condition',
       label: 'Condição',
-      render: (value: string) => <Tag>{getConditionLabel(value)}</Tag>
+      render: (value: string) => <Tag>{getConditionDatail(value)?.label}</Tag>
     },
     {
       key: 'location',
@@ -147,7 +147,7 @@ const AdsApprovalView = () => {
     {
       key: 'status',
       label: 'Status',
-      render: (value: string) => <Tag>{getStatusLabel(value)}</Tag>
+      render: (value: string) => <Tag>{getStatusDatail(value)?.label}</Tag>
     },
     {
       key: 'createdAt',
