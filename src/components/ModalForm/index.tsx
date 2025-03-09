@@ -1,12 +1,13 @@
 // src/components/FormModal.tsx
 
-import { ReactNode } from 'react'
+import { ReactNode, useRef } from 'react'
 
 import * as S from './styles'
 
 import { ModalProps } from 'antd'
 import { FormProvider, UseFormReturn, FieldValues } from 'react-hook-form'
 import { Schema } from 'yup'
+import useScrollbar from '@/hooks/useScrollbar'
 
 export interface FormModalProps<T extends FieldValues>
   extends Omit<ModalProps, 'footer' | 'onOk' | 'onCancel'> {
@@ -27,6 +28,10 @@ const FormModal = <T extends object>({
   width = 520,
   ...rest
 }: FormModalProps<T>) => {
+  const formContainerRef = useRef(null)
+
+  const [containerHasScrollbar] = useScrollbar(formContainerRef)
+
   return (
     <S.StyledModal
       title={title}
@@ -37,7 +42,12 @@ const FormModal = <T extends object>({
       centered
       {...rest}
     >
-      <FormProvider {...formMethods}>{children}</FormProvider>
+      <S.StyledModalContent
+        ref={formContainerRef}
+        scrollbar={containerHasScrollbar ? 1 : 0}
+      >
+        <FormProvider {...formMethods}>{children}</FormProvider>
+      </S.StyledModalContent>
     </S.StyledModal>
   )
 }

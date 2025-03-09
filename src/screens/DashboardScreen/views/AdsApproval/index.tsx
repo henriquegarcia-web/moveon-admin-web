@@ -151,7 +151,7 @@ const AdsApprovalView = () => {
             {selectedAd.video && (
               <S.VideoPreview controls src={selectedAd.video} />
             )}
-            <S.ImageGrid>
+            {/* <S.ImageGrid>
               {selectedAd.photos.map((photo, index) => (
                 <S.ImagePreview
                   key={index}
@@ -159,7 +159,7 @@ const AdsApprovalView = () => {
                   alt={`Foto ${index + 1}`}
                 />
               ))}
-            </S.ImageGrid>
+            </S.ImageGrid> */}
             <DetailsForm
               data={selectedAd}
               fields={adDetailsFields}
@@ -190,7 +190,7 @@ const AdsApprovalView = () => {
             {selectedAd.video && (
               <S.VideoPreview controls src={selectedAd.video} />
             )}
-            <S.ImageGrid>
+            {/* <S.ImageGrid>
               {selectedAd.photos.map((photo, index) => (
                 <S.ImagePreview
                   key={index}
@@ -198,7 +198,7 @@ const AdsApprovalView = () => {
                   alt={`Foto ${index + 1}`}
                 />
               ))}
-            </S.ImageGrid>
+            </S.ImageGrid> */}
             <DetailsForm
               data={selectedAd}
               fields={adDetailsFields}

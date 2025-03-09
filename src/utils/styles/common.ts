@@ -137,6 +137,11 @@ export const FormattedForm = styled(Form)<{ onFinish: any }>`
     background-color: ${() => useToken().token.colorPrimary};
     color: white;
   }
+
+  .ant-upload {
+    width: 80px !important;
+    height: 80px !important;
+  }
 `
 
 export const FormattedMenu = styled(Menu)<{ opened: number }>`

@@ -2,24 +2,33 @@
 import { useState, useEffect } from 'react'
 import * as S from './styles'
 import { LuTrash, LuSquarePen, LuEye, LuPlus } from 'react-icons/lu'
-import { Button, Tag, Form, Select, Input, Upload, message } from 'antd'
+import {
+  Button,
+  Tag,
+  Form,
+  Select,
+  Input,
+  Upload,
+  message,
+  List,
+  Space,
+  Image
+} from 'antd'
 import { Controller, useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { ViewHeader, FormModal, ConfirmModal, DetailsForm } from '@/components'
 import Table, { TableColumn } from '@/components/Table'
 import { IAd, AdStatus } from '@/types'
+import { useAds } from '@/contexts/AdsProvider'
 import {
   beforeUploadImage,
   beforeUploadVideo,
-  uploadFileToFirebase,
-  getBase64
+  uploadFileToFirebase
 } from '@/utils/functions/uploadUtils'
-import { PiSpinnerGap } from 'react-icons/pi'
 import axios from 'axios'
-import { useAds } from '@/contexts/AdsProvider'
 
-// Schema de validação ajustado com base no mobile
+// Schema de validação ajustado
 const adSchema = yup
   .object({
     title: yup
@@ -47,13 +56,13 @@ const adSchema = yup
         .matches(/^\d{5}-?\d{3}$/, 'CEP inválido'),
       address: yup.string().required('O endereço é obrigatório')
     }),
-    photos: yup
-      .array()
-      .of(yup.string())
-      .min(1, 'Adicione pelo menos uma foto')
-      .max(6, 'Máximo de 6 fotos permitido')
-      .required('Adicione pelo menos uma foto'),
-    video: yup.string().optional(),
+    // photos: yup
+    //   .array()
+    //   .of(yup.mixed<File>().required('Cada item deve ser um arquivo')),
+    //   .min(1, 'Adicione pelo menos uma foto')
+    //   .max(5, 'Máximo de 5 fotos permitido')
+    //   .required('Adicione pelo menos uma foto'),
+    // video: yup.mixed<File>().optional(),
     status: yup
       .string()
       .oneOf(['pending', 'published', 'editing', 'rejected', 'sold', 'removed'])
@@ -61,7 +70,20 @@ const adSchema = yup
   })
   .required()
 
-type AdFormData = yup.InferType<typeof adSchema>
+type AdFormData = {
+  title: string
+  description: string
+  price: number
+  categoryId: string
+  condition: 'new' | 'semi_new' | 'used'
+  location: {
+    cep: string
+    address: string
+  }
+  // photos: File[]
+  // video?: File
+  status: AdStatus
+}
 
 const AdsListView = () => {
   const { ads, loading, createAd, updateAd, deleteAd } = useAds()
@@ -72,8 +94,6 @@ const AdsListView = () => {
   const [isDeleteModalVisible, setDeleteModalVisible] = useState(false)
   const [isDetailsModalVisible, setDetailsModalVisible] = useState(false)
   const [selectedAd, setSelectedAd] = useState<IAd | null>(null)
-  const [imageLoading, setImageLoading] = useState(false)
-  const [videoLoading, setVideoLoading] = useState(false)
 
   // Configuração do formulário
   const {
@@ -92,8 +112,8 @@ const AdsListView = () => {
       categoryId: '',
       condition: 'new',
       location: { cep: '', address: '' },
-      photos: [],
-      video: '',
+      // photos: [],
+      // video: undefined,
       status: 'pending'
     }
   })
@@ -199,71 +219,119 @@ const AdsListView = () => {
     }
   ]
 
-  // Handlers de upload
-  const handleImageChange = async (info: any) => {
-    if (info.file.status === 'uploading') {
-      setImageLoading(true)
-      return
-    }
-    if (info.file.status === 'done') {
-      const file = info.file.originFileObj as File
-      const url = await uploadFileToFirebase(
-        file,
-        `ads/images/${Date.now()}_${file.name}`
-      )
-      setValue('photos', [...(control._formValues.photos || []), url], {
-        shouldValidate: true
-      })
-      setImageLoading(false)
-      message.success('Imagem carregada com sucesso!')
-    }
-  }
+  // // Handlers para adicionar arquivos localmente
+  // const handleImageSelect = (info: any) => {
+  //   const files = Array.from(info.fileList).map(
+  //     (item: any) => item.originFileObj as File
+  //   )
+  //   const currentPhotos = watch('photos')
+  //   const newPhotos = [...currentPhotos, ...files].slice(0, 5)
+  //   setValue('photos', newPhotos, { shouldValidate: true })
+  // }
 
-  const handleVideoChange = async (info: any) => {
-    if (info.file.status === 'uploading') {
-      setVideoLoading(true)
-      return
-    }
-    if (info.file.status === 'done') {
-      const file = info.file.originFileObj as File
-      const url = await uploadFileToFirebase(
-        file,
-        `ads/videos/${Date.now()}_${file.name}`
-      )
-      setValue('video', url, { shouldValidate: true })
-      setVideoLoading(false)
-      message.success('Vídeo carregado com sucesso!')
-    }
-  }
+  // const handleVideoSelect = (info: any) => {
+  //   const file = info.file.originFileObj as File
+  //   setValue('video', file, { shouldValidate: true })
+  // }
 
-  const uploadButton = (loading: boolean) => (
-    <S.AdsUpload>
-      <S.AdsUploadLoading loading={loading ? 1 : 0}>
-        {loading ? <PiSpinnerGap /> : <LuPlus />}
-      </S.AdsUploadLoading>
-      <p>Upload</p>
-    </S.AdsUpload>
-  )
+  // // Função para deletar imagem temporária
+  // const handleDeleteImage = (index: number) => {
+  //   const currentPhotos = watch('photos')
+  //   const updatedPhotos = currentPhotos.filter((_, i) => i !== index)
+  //   setValue('photos', updatedPhotos, { shouldValidate: true })
+  //   message.success('Imagem removida com sucesso!')
+  // }
 
-  // Submissão do formulário de criação
+  // // Função para deletar vídeo temporário
+  // const handleDeleteVideo = () => {
+  //   setValue('video', undefined, { shouldValidate: true })
+  //   message.success('Vídeo removido com sucesso!')
+  // }
+
+  // const uploadButton = () => (
+  //   <S.AdsUpload>
+  //     <LuPlus />
+  //     <p>Upload</p>
+  //   </S.AdsUpload>
+  // )
+
+  // Submissão do formulário com upload para Firebase
   const onCreateAdSubmit = async (data: AdFormData) => {
-    await createAd({
-      ...data,
-      photos: data.photos.filter((photo) => photo !== undefined) as string[]
-    })
-    setCreateModalVisible(false)
-    reset()
+    try {
+      // Upload das imagens
+      // const photoUrls = await Promise.all(
+      //   data.photos.map((file, index) =>
+      //     uploadFileToFirebase(
+      //       file,
+      //       `ads/images/${Date.now()}_${index}_${file.name}`
+      //     )
+      //   )
+      // )
+
+      // Upload do vídeo (se existir)
+      // let videoUrl: string | undefined
+      // if (data.video) {
+      //   videoUrl = await uploadFileToFirebase(
+      //     data.video,
+      //     `ads/videos/${Date.now()}_${data.video.name}`
+      //   )
+      // }
+
+      // Criar o anúncio com as URLs
+      await createAd({
+        ...data
+        // photos: photoUrls,
+        // video: videoUrl
+      })
+
+      setCreateModalVisible(false)
+      reset()
+      message.success('Anúncio criado com sucesso!')
+    } catch (error) {
+      message.error('Erro ao criar o anúncio.')
+    }
   }
 
   // Submissão do formulário de edição
   const onEditAdSubmit = async (data: AdFormData) => {
     if (selectedAd) {
-      await updateAd(selectedAd.id, {
-        ...data,
-        photos: data.photos.filter((photo) => photo !== undefined)
-      })
-      setEditModalVisible(false)
-      reset()
+      try {
+        // const photoUrls = await Promise.all(
+        //   data.photos.map((file, index) =>
+        //     typeof file === 'string'
+        //       ? file
+        //       : uploadFileToFirebase(
+        //           file,
+        //           `ads/images/${Date.now()}_${index}_${file.name}`
+        //         )
+        //   )
+        // )
+
+        // let videoUrl: string | undefined = undefined
+        // if (data.video && typeof data.video !== 'string') {
+        //   videoUrl = await uploadFileToFirebase(
+        //     data.video,
+        //     `ads/videos/${Date.now()}_${data.video.name}`
+        //   )
+        // }
+        // if (data.video && typeof data.video !== 'string') {
+        //   videoUrl = await uploadFileToFirebase(
+        //     data.video,
+        //     `ads/videos/${Date.now()}_${data.video.name}`
+        //   )
+        // }
+
+        await updateAd(selectedAd.id, {
+          ...data
+          // photos: photoUrls,
+          // video: videoUrl
+        })
+        setEditModalVisible(false)
+        reset()
+        message.success('Anúncio atualizado com sucesso!')
+      } catch (error) {
+        message.error('Erro ao atualizar o anúncio.')
+      }
     }
   }
 
@@ -273,6 +341,7 @@ const AdsListView = () => {
       await deleteAd(selectedAd.id)
       setDeleteModalVisible(false)
       setSelectedAd(null)
+      message.success('Anúncio excluído com sucesso!')
     }
   }
 
@@ -303,7 +372,6 @@ const AdsListView = () => {
       render: (value: string[]) => value.join(', ')
     },
     { key: 'video', label: 'Vídeo' },
-    { key: 'contactMethod', label: 'Método de Contato' },
     { key: 'status', label: 'Status' },
     { key: 'createdAt', label: 'Criado em' },
     { key: 'updatedAt', label: 'Atualizado em' }
@@ -357,72 +425,107 @@ const AdsListView = () => {
       >
         <S.AdForm onFinish={handleSubmit(onCreateAdSubmit)} layout="vertical">
           {/* Upload de Imagens */}
-          <Controller
+          {/* <Controller
             name="photos"
             control={control}
             render={({ field }) => (
               <Form.Item
-                label="Fotos (mínimo 1, máximo 6)"
+                label="Fotos (mínimo 1, máximo 5, apenas JPG/PNG)"
                 validateStatus={errors.photos ? 'error' : ''}
                 help={errors.photos?.message}
               >
-                <Upload
-                  name="photos"
-                  listType="picture-card"
-                  multiple
-                  beforeUpload={beforeUploadImage}
-                  onChange={handleImageChange}
-                  customRequest={({ onSuccess }) =>
-                    onSuccess && onSuccess('ok')
-                  }
-                  fileList={field.value.map((url, index) => ({
-                    uid: `${index}`,
-                    name: `image-${index}`,
-                    status: 'done',
-                    url
-                  }))}
-                >
-                  {field.value.length < 6 && uploadButton(imageLoading)}
-                </Upload>
+                <S.AdFormUploadMedia>
+                  <Upload
+                    name="photos"
+                    listType="picture-card"
+                    multiple
+                    beforeUpload={beforeUploadImage}
+                    onChange={handleImageSelect}
+                    fileList={[]}
+                    accept="image/jpeg,image/png"
+                    showUploadList={false}
+                    disabled
+                  >
+                    {field.value.length < 5 && uploadButton()}
+                  </Upload>
+                  <S.AdFormMediasWrapper>
+                    {field.value.map((image, index) => {
+                      const imageUrl = URL.createObjectURL(image)
+                      return (
+                        <S.AdFormMediaContainer key={image.name}>
+                          <S.AdFormMedia
+                            src={imageUrl}
+                            preview={{ src: imageUrl }}
+                            onLoad={() => URL.revokeObjectURL(imageUrl)}
+                            width={80}
+                            height={80}
+                          />
+                          <S.AdFormMediaDelete
+                            icon={<LuTrash />}
+                            danger
+                            size="small"
+                            onClick={() => handleDeleteImage(index)}
+                          />
+                        </S.AdFormMediaContainer>
+                      )
+                    })}
+                  </S.AdFormMediasWrapper>
+                </S.AdFormUploadMedia>
               </Form.Item>
             )}
-          />
+          /> */}
           {/* Upload de Vídeo */}
-          <Controller
+          {/* <Controller
             name="video"
             control={control}
             render={({ field }) => (
               <Form.Item
-                label="Vídeo (opcional, máximo 1)"
+                label="Vídeo (opcional, máximo 1, apenas MP4)"
                 validateStatus={errors.video ? 'error' : ''}
                 help={errors.video?.message}
               >
-                <Upload
-                  name="video"
-                  listType="picture-card"
-                  beforeUpload={beforeUploadVideo}
-                  onChange={handleVideoChange}
-                  customRequest={({ onSuccess }) =>
-                    onSuccess && onSuccess('ok')
-                  }
-                  fileList={
-                    field.value
-                      ? [
-                          {
-                            uid: '1',
-                            name: 'video',
-                            status: 'done',
-                            url: field.value
+                <S.AdFormUploadMedia>
+                  <Upload
+                    name="video"
+                    listType="picture-card"
+                    beforeUpload={beforeUploadVideo}
+                    onChange={handleVideoSelect}
+                    fileList={[]}
+                    accept="video/mp4"
+                    showUploadList={false}
+                    disabled
+                  >
+                    {!field.value && uploadButton()}
+                  </Upload>
+                  {field.value && (
+                    <S.AdFormMediasWrapper>
+                      <S.AdFormMediaContainer key={field.value.name}>
+                        <S.AdFormMedia
+                          src={URL.createObjectURL(field.value)}
+                          preview={{ src: URL.createObjectURL(field.value) }}
+                          onLoad={() =>
+                            URL.revokeObjectURL(
+                              field.value
+                                ? URL.createObjectURL(field.value)
+                                : ''
+                            )
                           }
-                        ]
-                      : []
-                  }
-                >
-                  {!field.value && uploadButton(videoLoading)}
-                </Upload>
+                          width={80}
+                          height={80}
+                        />
+                        <S.AdFormMediaDelete
+                          icon={<LuTrash />}
+                          danger
+                          size="small"
+                          onClick={handleDeleteVideo} // Usar função correta para vídeo
+                        />
+                      </S.AdFormMediaContainer>
+                    </S.AdFormMediasWrapper>
+                  )}
+                </S.AdFormUploadMedia>
               </Form.Item>
             )}
-          />
+          /> */}
           <Controller
             name="title"
             control={control}
@@ -487,7 +590,6 @@ const AdsListView = () => {
                   placeholder="Selecione uma categoria"
                   options={[
                     { value: '', label: 'Selecione uma categoria' },
-                    // Adicione categorias dinâmicas aqui, ex.: vindo do contexto
                     { value: '1', label: 'Bicicletas' },
                     { value: '2', label: 'Eletrônicos' }
                   ]}
@@ -547,7 +649,6 @@ const AdsListView = () => {
               </Form.Item>
             )}
           />
-
           <Controller
             name="status"
             control={control}
@@ -587,7 +688,7 @@ const AdsListView = () => {
         </S.AdForm>
       </FormModal>
 
-      {/* Modal de Edição (mantido como estava) */}
+      {/* Modal de Edição */}
       <FormModal<AdFormData>
         visible={isEditModalVisible}
         onClose={() => setEditModalVisible(false)}
@@ -684,36 +785,6 @@ const AdsListView = () => {
                 help={errors.location?.address?.message}
               >
                 <Input {...field} disabled />
-              </Form.Item>
-            )}
-          />
-          <Controller
-            name="photos"
-            control={control}
-            render={({ field }) => (
-              <Form.Item
-                label="Fotos (URLs separadas por vírgula)"
-                validateStatus={errors.photos ? 'error' : ''}
-                help={errors.photos?.message}
-              >
-                <Input
-                  {...field}
-                  onChange={(e) => field.onChange(e.target.value.split(','))}
-                  value={field.value?.join(',') || ''}
-                />
-              </Form.Item>
-            )}
-          />
-          <Controller
-            name="video"
-            control={control}
-            render={({ field }) => (
-              <Form.Item
-                label="Vídeo (URL)"
-                validateStatus={errors.video ? 'error' : ''}
-                help={errors.video?.message}
-              >
-                <Input {...field} />
               </Form.Item>
             )}
           />

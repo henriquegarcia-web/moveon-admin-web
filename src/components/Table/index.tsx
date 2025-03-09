@@ -1,7 +1,11 @@
 // src/components/Table.tsx
 
-import { TableProps as AntTableProps } from 'antd'
+import { TableProps as AntTableProps, ConfigProvider } from 'antd'
 import * as S from './styles'
+
+import locale from 'antd/locale/pt_BR'
+import dayjs from 'dayjs'
+dayjs.locale('pt-br')
 
 export interface TableColumn<T> {
   title: string
@@ -40,19 +44,21 @@ const Table = <T extends object>({
   ...rest
 }: TableProps<T>) => {
   return (
-    <S.StyledTable<T>
-      columns={columns as any}
-      dataSource={dataSource}
-      rowKey={rowKey as any}
-      loading={loading}
-      pagination={pagination}
-      onRow={(record) => ({
-        onClick: () => onRowClick?.(record),
-        style: { cursor: onRowClick ? 'pointer' : 'default' }
-      })}
-      size="small"
-      {...rest}
-    />
+    <ConfigProvider locale={locale}>
+      <S.StyledTable<T>
+        columns={columns as any}
+        dataSource={dataSource}
+        rowKey={rowKey as any}
+        loading={loading}
+        pagination={pagination}
+        onRow={(record) => ({
+          onClick: () => onRowClick?.(record),
+          style: { cursor: onRowClick ? 'pointer' : 'default' }
+        })}
+        size="small"
+        {...rest}
+      />
+    </ConfigProvider>
   )
 }
 

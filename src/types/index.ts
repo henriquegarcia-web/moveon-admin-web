@@ -115,7 +115,7 @@ export interface IAd {
     cep: string
     address: string
   }
-  photos: string[]
+  photos?: string[]
   video?: string
   status: AdStatus
   createdAt: string
