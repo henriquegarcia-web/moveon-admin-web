@@ -47,6 +47,7 @@ import { AdsProvider } from '@/contexts/AdsProvider'
 import { BannersProvider } from '@/contexts/BannersProvider'
 import { AdvertisingProvider } from '@/contexts/AdvertisingProvider'
 import { ReportsProvider } from '@/contexts/ReportsProvider'
+import { HomeProvider } from '@/contexts/HomeProvider'
 
 // Interface do Menu
 export interface IMenu {
@@ -68,7 +69,13 @@ export const ADMIN_MENUS: IMenu[] = [
     menuName: 'Início',
     menuLegend: 'Visão geral do dashboard',
     menuIcon: <LuHouse />,
-    menuView: <HomeView />,
+    menuView: (
+      <ReportsProvider>
+        <HomeProvider>
+          <HomeView />
+        </HomeProvider>
+      </ReportsProvider>
+    ),
     menuCategory: 'Principal',
     menuDisabled: false,
     menuHidden: false
