@@ -46,6 +46,7 @@ import { UsersProvider } from '@/contexts/UsersProvider'
 import { AdsProvider } from '@/contexts/AdsProvider'
 import { BannersProvider } from '@/contexts/BannersProvider'
 import { AdvertisingProvider } from '@/contexts/AdvertisingProvider'
+import { ReportsProvider } from '@/contexts/ReportsProvider'
 
 // Interface do Menu
 export interface IMenu {
@@ -79,7 +80,11 @@ export const ADMIN_MENUS: IMenu[] = [
     menuName: 'Relatório de Usuários',
     menuLegend: 'Estatísticas e dados de usuários',
     menuIcon: <LuChartColumnBig />,
-    menuView: <ReportsUsersView />,
+    menuView: (
+      <ReportsProvider>
+        <ReportsUsersView />
+      </ReportsProvider>
+    ),
     menuCategory: 'Relatórios',
     menuDisabled: false,
     menuHidden: false
@@ -89,7 +94,11 @@ export const ADMIN_MENUS: IMenu[] = [
     menuName: 'Relatório de Anúncios',
     menuLegend: 'Estatísticas de anúncios publicados',
     menuIcon: <LuChartColumnBig />,
-    menuView: <ReportsAdsView />,
+    menuView: (
+      <ReportsProvider>
+        <ReportsAdsView />
+      </ReportsProvider>
+    ),
     menuCategory: 'Relatórios',
     menuDisabled: false,
     menuHidden: false
@@ -231,8 +240,11 @@ export const ADMIN_MENUS: IMenu[] = [
     menuName: 'Segurança',
     menuLegend: 'Configurações de segurança e privacidade',
     menuIcon: <LuShield />,
-    menuView: <SecuritySettingsView />,
-
+    menuView: (
+      <SettingsProvider>
+        <SecuritySettingsView />
+      </SettingsProvider>
+    ),
     menuCategory: 'Configurações',
     menuDisabled: true,
     menuHidden: false
@@ -242,8 +254,11 @@ export const ADMIN_MENUS: IMenu[] = [
     menuName: 'Termos e Políticas',
     menuLegend: 'Gerenciar termos de uso e políticas',
     menuIcon: <LuFileText />,
-    menuView: <TermsManagementView />,
-
+    menuView: (
+      <SettingsProvider>
+        <TermsManagementView />
+      </SettingsProvider>
+    ),
     menuCategory: 'Configurações',
     menuDisabled: false,
     menuHidden: false
@@ -253,9 +268,13 @@ export const ADMIN_MENUS: IMenu[] = [
     menuName: 'Configurações Gerais',
     menuLegend: 'Configurações gerais da plataforma',
     menuIcon: <LuSettings />,
-    menuView: <SettingsGeneralView />,
+    menuView: (
+      <SettingsProvider>
+        <SettingsGeneralView />
+      </SettingsProvider>
+    ),
     menuCategory: 'Configurações',
-    menuDisabled: false,
+    menuDisabled: true,
     menuHidden: false
   },
   {

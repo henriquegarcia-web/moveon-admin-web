@@ -1,5 +1,3 @@
-// src/contexts/SettingsProvider.tsx
-
 import {
   createContext,
   useContext,
@@ -9,17 +7,20 @@ import {
 } from 'react'
 import { ref, onValue, remove } from 'firebase/database'
 import { db } from '@/firebase/config'
-import { IAdminProfile } from '@/types'
+import { IAdminProfile, ITermDocument } from '@/types'
 import { createAdminAccess, blockAdminAccess } from '@/services/auth'
+import { updateTermDocument } from '@/services/terms'
 import { App } from 'antd'
 import { useAuth } from '@/contexts/AuthProvider'
 
 interface SettingsContextData {
   admins: IAdminProfile[]
+  terms: ITermDocument[]
   loading: boolean
   createAccess: (email: string) => Promise<void>
   deleteAccess: (adminId: string) => Promise<void>
   toggleBlockAccess: (adminId: string, block: boolean) => Promise<void>
+  updateTerm: (termId: string, content: string) => Promise<void>
 }
 
 const SettingsContext = createContext<SettingsContextData>(
@@ -31,12 +32,13 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   const { admin: currentAdmin } = useAuth()
 
   const [admins, setAdmins] = useState<IAdminProfile[]>([])
+  const [terms, setTerms] = useState<ITermDocument[]>([])
   const [loading, setLoading] = useState(true)
 
   // Listagem de administradores
   useEffect(() => {
     const adminsRef = ref(db, 'admins')
-    const unsubscribe = onValue(adminsRef, (snapshot) => {
+    const unsubscribeAdmins = onValue(adminsRef, (snapshot) => {
       if (snapshot.exists()) {
         const adminsData = snapshot.val()
         const adminsList = Object.entries(adminsData).map(([id, data]) => ({
@@ -50,7 +52,25 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false)
     })
 
-    return () => unsubscribe()
+    // Listagem de termos
+    const termsRef = ref(db, 'terms')
+    const unsubscribeTerms = onValue(termsRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const termsData = snapshot.val()
+        const termsList = Object.entries(termsData).map(([id, data]) => ({
+          id,
+          ...(data as Omit<ITermDocument, 'id'>)
+        }))
+        setTerms(termsList)
+      } else {
+        setTerms([])
+      }
+    })
+
+    return () => {
+      unsubscribeAdmins()
+      unsubscribeTerms()
+    }
   }, [])
 
   // Criar novo acesso
@@ -96,12 +116,24 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
+  // Atualizar um documento de termos
+  const updateTerm = async (termId: string, content: string) => {
+    try {
+      await updateTermDocument(termId, content)
+      message.success('Documento atualizado com sucesso!')
+    } catch (error: any) {
+      message.error(error.message || 'Erro ao atualizar documento.')
+    }
+  }
+
   const contextValue: SettingsContextData = {
     admins,
+    terms,
     loading,
     createAccess,
     deleteAccess,
-    toggleBlockAccess
+    toggleBlockAccess,
+    updateTerm
   }
 
   return (

@@ -171,3 +171,27 @@ export interface IAdvertisingCampaign {
   createdBy: string
   durationDays?: number
 }
+
+// =============================================
+
+export interface ITermDocument {
+  id: string
+  title: string
+  content: string
+  updatedAt: string
+}
+
+// =============================================
+
+export interface ReportsData {
+  users: IUserProfile[]
+  totalUsers: number
+  verifiedUsersPercentage: number
+  trustLevelAverage: number
+  sportPopularity: { name: string; count: number }[]
+  categoryPopularity: { name: string; count: number }[]
+  ageDistribution: { ageRange: string; count: number }[]
+  stateDistribution: { state: string; count: number }[]
+  recentUsers: IUserProfile[]
+  topEngagedUsers: IUserProfile[]
+}

@@ -1,7 +1,7 @@
 // src/App.tsx
 
 import AppRoutes from '@/Routes'
-import { ConfigProvider, theme } from 'antd'
+import { ConfigProvider, App as AntdApp, theme } from 'antd'
 
 import dayjs from 'dayjs'
 dayjs.locale('pt-br')
@@ -9,7 +9,6 @@ dayjs.locale('pt-br')
 function App() {
   return <AppThemed />
 }
-import { App as AntdApp } from 'antd'
 
 export default App
 
