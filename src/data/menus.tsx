@@ -45,6 +45,7 @@ import { SettingsProvider } from '@/contexts/SettingsProvider'
 import { UsersProvider } from '@/contexts/UsersProvider'
 import { AdsProvider } from '@/contexts/AdsProvider'
 import { BannersProvider } from '@/contexts/BannersProvider'
+import { AdvertisingProvider } from '@/contexts/AdvertisingProvider'
 
 // Interface do Menu
 export interface IMenu {
@@ -120,16 +121,6 @@ export const ADMIN_MENUS: IMenu[] = [
     menuDisabled: false,
     menuHidden: false
   },
-  {
-    menuId: 'publicidade',
-    menuName: 'Publicidade',
-    menuLegend: 'Gerenciar campanhas publicitárias na plataforma',
-    menuIcon: <LuMegaphone />,
-    menuView: <AdvertisingManagementView />,
-    menuCategory: 'Layout',
-    menuDisabled: false,
-    menuHidden: false
-  },
 
   // Categoria: Gerenciamento
   {
@@ -169,6 +160,20 @@ export const ADMIN_MENUS: IMenu[] = [
       <AdsProvider>
         <AdsApprovalView />
       </AdsProvider>
+    ),
+    menuCategory: 'Gerenciamento',
+    menuDisabled: false,
+    menuHidden: false
+  },
+  {
+    menuId: 'publicidade',
+    menuName: 'Publicidade',
+    menuLegend: 'Gerenciar campanhas publicitárias na plataforma',
+    menuIcon: <LuMegaphone />,
+    menuView: (
+      <AdvertisingProvider>
+        <AdvertisingManagementView />
+      </AdvertisingProvider>
     ),
     menuCategory: 'Gerenciamento',
     menuDisabled: false,

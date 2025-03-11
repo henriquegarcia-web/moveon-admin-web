@@ -142,3 +142,32 @@ export interface IBanner {
   updatedAt?: string
   createdBy: string
 }
+
+// ============================================= ADVERTISING TYPES
+
+export interface IAdvertisingCampaign {
+  id: string
+  name: string
+  content: {
+    imageUrl?: string
+  }
+  targetAudience: {
+    sports?: string[]
+    location?: string
+    ageRange?: number[]
+  }
+  budget: {
+    total: number
+    model: 'cpc' | 'cpm'
+    value: number
+  }
+  status: 'active' | 'paused' | 'scheduled' | 'finished'
+  startDate: string
+  endDate: string
+  impressions: number
+  clicks: number
+  createdAt: string
+  updatedAt?: string
+  createdBy: string
+  durationDays?: number
+}

@@ -2,7 +2,6 @@
 
 import styled from 'styled-components'
 import { Result, Table, theme } from 'antd'
-
 import Fonts from '@/utils/styles/fonts'
 import Colors from '@/utils/styles/colors'
 
@@ -21,7 +20,7 @@ export const StyledTable = styled(Table)<{ empty: number }>`
       text-overflow: ellipsis;
       white-space: nowrap;
 
-      &:not(&:first-of-type) {
+      &:not(:first-of-type) {
         padding-top: 2px !important;
       }
     }
@@ -32,7 +31,6 @@ export const StyledTable = styled(Table)<{ empty: number }>`
     font-size: ${Fonts.xxxs};
     line-height: ${Fonts.xxxs};
     font-weight: 400;
-
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -46,6 +44,7 @@ export const StyledTable = styled(Table)<{ empty: number }>`
   .ant-table-row {
     td {
       align-items: center;
+      height: 50px !important;
     }
 
     &:last-of-type td {
@@ -58,61 +57,76 @@ export const StyledTable = styled(Table)<{ empty: number }>`
     border: 1px solid ${() => useToken().token.colorBorderSecondary};
   }
 
+  /* Estilização para colunas dinâmicas */
   ${({ columns }) =>
     columns &&
+    columns.length > 0 &&
     `
     .ant-table-thead th,
     .ant-table-tbody td {
       ${columns
         .map(
           (col, index) => `
-        &:nth-child(${index + 1}) {
-          width: auto;
-          min-width: 50px; 
-          max-width: ${
-            col.width
-              ? typeof col.width === 'number'
-                ? `${col.width}px`
-                : col.width
-              : '100%'
-          };
-        }
-      `
+          &:nth-child(${index + 1}) {
+            width: auto;
+            min-width: 50px;
+            max-width: ${
+              col.width
+                ? typeof col.width === 'number'
+                  ? `${col.width}px`
+                  : col.width
+                : '100%'
+            };
+          }
+        `
         )
         .join('')}
-    `}
+    }
+  `}
 
+  /* Estilização para estado vazio */
   ${({ empty }) =>
-    empty &&
+    empty > 0 &&
     `
+    pointer-events: none;
+
+    .ant-table-content {
+      position: relative !important;
+      border-radius: 8px;
+    }
+
+    tbody {
       height: 260px;
-      pointer-events: none;
-      
-      table {
-        border: none !important;
-      }
+    }
 
-      .ant-table-content {
-        position: relative;
-        border-radius: 8px;
-      }
+    tbody .ant-table-cell {
+      border: 2px solid red !important;
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      height: 100% !important;
+      border: none !important;
+    }
+  `}
 
-      tbody .ant-table-cell {
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        border: none !important;
-      }
-    `}
+  /* Estilização para estado carregando */
+  ${({ loading }) =>
+    loading &&
+    `
+    .ant-result {
+      display: none;
+    }
+  `}
 ` as unknown as typeof Table
 
 export const TableEmptyResult = styled(Result)`
   position: absolute;
   left: 50%;
   top: 50%;
-  transform: translate(-50%, 10px);
+  transform: translate(-50%, -50%);
+  margin-top: 20px;
 
   img {
     width: 90px;

@@ -804,3 +804,65 @@ export const BANNER_POSITION_TYPES: BannerPosition[] = [
       'Banner exibido em uma posição personalizada ou não especificada.'
   }
 ]
+
+// ======================================================== STATUS DA CAMPANHA PUBLICITÁRIA
+
+export interface AdvertisingStatus {
+  key: 'active' | 'paused' | 'scheduled' | 'finished'
+  label: string
+  description: string
+  color?: string
+}
+
+export const ADVERTISING_STATUS_TYPES: AdvertisingStatus[] = [
+  {
+    key: 'active',
+    label: 'Ativa',
+    description: 'A campanha está atualmente em exibição.',
+    color: 'green'
+  },
+  {
+    key: 'paused',
+    label: 'Pausada',
+    description: 'A campanha foi pausada temporariamente.',
+    color: 'orange'
+  },
+  {
+    key: 'scheduled',
+    label: 'Agendada',
+    description: 'A campanha está programada para começar em uma data futura.',
+    color: 'blue'
+  },
+  {
+    key: 'finished',
+    label: 'Finalizada',
+    description: 'A campanha atingiu sua data de término ou orçamento.',
+    color: 'gray'
+  }
+]
+
+// ======================================================== TIPO DA CAMPANHA PUBLICITÁRIA
+
+export interface AdvertisingType {
+  key: 'sponsored-ad' | 'highlight' | 'push-notification'
+  label: string
+  description: string
+}
+
+export const ADVERTISING_TYPE_TYPES: AdvertisingType[] = [
+  {
+    key: 'sponsored-ad',
+    label: 'Anúncio Patrocinado',
+    description: 'Anúncio com imagem e texto destacado na plataforma.'
+  },
+  {
+    key: 'highlight',
+    label: 'Destaque',
+    description: 'Destaca um anúncio existente (IAd) na página inicial.'
+  },
+  {
+    key: 'push-notification',
+    label: 'Push Notification',
+    description: 'Envia uma notificação push para os usuários.'
+  }
+]

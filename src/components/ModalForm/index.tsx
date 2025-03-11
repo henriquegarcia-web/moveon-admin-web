@@ -1,9 +1,7 @@
 // src/components/FormModal.tsx
 
 import { ReactNode, useRef } from 'react'
-
 import * as S from './styles'
-
 import { ModalProps } from 'antd'
 import { FormProvider, UseFormReturn, FieldValues } from 'react-hook-form'
 import { Schema } from 'yup'
@@ -29,7 +27,6 @@ const FormModal = <T extends object>({
   ...rest
 }: FormModalProps<T>) => {
   const formContainerRef = useRef<HTMLDivElement>(null)
-
   const [containerHasScrollbar] = useScrollbar(formContainerRef, visible)
 
   return (
