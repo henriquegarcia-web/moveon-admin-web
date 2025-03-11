@@ -9,7 +9,7 @@ import { ref, onValue } from 'firebase/database'
 import { db } from '@/firebase/config'
 import { App } from 'antd'
 import moment from 'moment'
-import { IUserProfile, ReportsData } from '@/types'
+import { IUserProfile, IAd, ReportsData } from '@/types'
 
 interface ReportsContextData {
   reportsData: ReportsData
@@ -23,11 +23,15 @@ const ReportsContext = createContext<ReportsContextData>(
 export const ReportsProvider = ({ children }: { children: ReactNode }) => {
   const { message } = App.useApp()
   const [users, setUsers] = useState<IUserProfile[]>([])
+  const [ads, setAds] = useState<IAd[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const usersRef = ref(db, 'users')
-    const unsubscribe = onValue(
+    const adsRef = ref(db, 'ads')
+
+    // Carregar usuários
+    const unsubscribeUsers = onValue(
       usersRef,
       (snapshot) => {
         if (snapshot.exists()) {
@@ -40,34 +44,52 @@ export const ReportsProvider = ({ children }: { children: ReactNode }) => {
         } else {
           setUsers([])
         }
-        setLoading(false)
       },
       (error) => {
         message.error('Erro ao carregar dados de usuários: ' + error.message)
+      }
+    )
+
+    // Carregar anúncios
+    const unsubscribeAds = onValue(
+      adsRef,
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const adsData = snapshot.val()
+          const adsList = Object.entries(adsData)?.map(([id, data]) => ({
+            id,
+            ...(data as Omit<IAd, 'id'>)
+          }))
+          setAds(adsList)
+        } else {
+          setAds([])
+        }
+        setLoading(false)
+      },
+      (error) => {
+        message.error('Erro ao carregar dados de anúncios: ' + error.message)
         setLoading(false)
       }
     )
 
-    return () => unsubscribe()
+    return () => {
+      unsubscribeUsers()
+      unsubscribeAds()
+    }
   }, [message])
 
   const reportsData: ReportsData = {
+    // Dados de usuários
     users,
     totalUsers: users.length,
-
-    // Percentual de usuários verificados
     verifiedUsersPercentage: (() => {
       const verified = users.filter((user) => user.isVerified).length
       return users.length > 0 ? (verified / users.length) * 100 : 0
     })(),
-
-    // Média de nível de confiança
     trustLevelAverage: (() => {
       const totalTrust = users.reduce((sum, user) => sum + user.trustLevel, 0)
       return users.length > 0 ? totalTrust / users.length : 0
     })(),
-
-    // Popularidade de esportes
     sportPopularity: (() => {
       const sportsCount = users
         .flatMap((user) => user.interests?.sports || [])
@@ -75,14 +97,11 @@ export const ReportsProvider = ({ children }: { children: ReactNode }) => {
           acc[sport.name] = (acc[sport.name] || 0) + 1
           return acc
         }, {} as Record<string, number>)
-
       return Object.entries(sportsCount)?.map(([name, count]) => ({
         name,
         count
       }))
     })(),
-
-    // Popularidade de categorias favoritas
     categoryPopularity: (() => {
       const categoriesCount = users
         .flatMap((user) => user.interests?.favoriteCategories || [])
@@ -90,14 +109,11 @@ export const ReportsProvider = ({ children }: { children: ReactNode }) => {
           acc[category] = (acc[category] || 0) + 1
           return acc
         }, {} as Record<string, number>)
-
       return Object.entries(categoriesCount)?.map(([name, count]) => ({
         name,
         count
       }))
     })(),
-
-    // Distribuição de idades
     ageDistribution: (() => {
       const ranges = [
         { range: '0-18', min: 0, max: 18 },
@@ -106,7 +122,6 @@ export const ReportsProvider = ({ children }: { children: ReactNode }) => {
         { range: '36-50', min: 36, max: 50 },
         { range: '51+', min: 51, max: 120 }
       ]
-
       return ranges?.map((range) => ({
         ageRange: range.range,
         count: users.filter((user) => {
@@ -115,30 +130,59 @@ export const ReportsProvider = ({ children }: { children: ReactNode }) => {
         }).length
       }))
     })(),
-
-    // Distribuição por estado
     stateDistribution: (() => {
       const statesCount = users.reduce((acc, user) => {
         const state = user.address.state
         acc[state] = (acc[state] || 0) + 1
         return acc
       }, {} as Record<string, number>)
-
       return Object.entries(statesCount)?.map(([state, count]) => ({
         state,
         count
       }))
     })(),
-
-    // Usuários mais recentes (top 5 por createdAt)
     recentUsers: users
       .sort((a, b) => moment(b.createdAt).diff(moment(a.createdAt)))
       .slice(0, 5),
-
-    // Usuários mais engajados (top 5 por trustLevel)
     topEngagedUsers: users
       .sort((a, b) => b.trustLevel - a.trustLevel)
-      .slice(0, 5)
+      .slice(0, 5),
+
+    // Dados de anúncios
+    ads,
+    totalAds: ads.length,
+    approvedAdsPercentage: (() => {
+      const approved = ads.filter((ad) => ad.status === 'approved').length
+      return ads.length > 0 ? (approved / ads.length) * 100 : 0
+    })(),
+    averageAdPrice: (() => {
+      const totalPrice = ads.reduce((sum, ad) => sum + ad.price, 0)
+      return ads.length > 0 ? totalPrice / ads.length : 0
+    })(),
+    adStatusDistribution: (() => {
+      const statusCount = ads.reduce((acc, ad) => {
+        acc[ad.status] = (acc[ad.status] || 0) + 1
+        return acc
+      }, {} as Record<string, number>)
+      return Object.entries(statusCount)?.map(([status, count]) => ({
+        status,
+        count
+      }))
+    })(),
+    adConditionDistribution: (() => {
+      const conditionCount = ads.reduce((acc, ad) => {
+        acc[ad.condition] = (acc[ad.condition] || 0) + 1
+        return acc
+      }, {} as Record<string, number>)
+      return Object.entries(conditionCount)?.map(([condition, count]) => ({
+        condition,
+        count
+      }))
+    })(),
+    recentAds: ads
+      .sort((a, b) => moment(b.createdAt).diff(moment(a.createdAt)))
+      .slice(0, 5),
+    mostExpensiveAds: ads.sort((a, b) => b.price - a.price).slice(0, 5)
   }
 
   const contextValue: ReportsContextData = {

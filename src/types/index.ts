@@ -194,4 +194,12 @@ export interface ReportsData {
   stateDistribution: { state: string; count: number }[]
   recentUsers: IUserProfile[]
   topEngagedUsers: IUserProfile[]
+  ads: IAd[]
+  totalAds: number
+  approvedAdsPercentage: number
+  averageAdPrice: number
+  adStatusDistribution: { status: string; count: number }[]
+  adConditionDistribution: { condition: string; count: number }[]
+  recentAds: IAd[]
+  mostExpensiveAds: IAd[]
 }
